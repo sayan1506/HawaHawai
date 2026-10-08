@@ -2,7 +2,7 @@
 
 AI-powered School Air-Safety Advisor for the AWS Environmental Hacks hackathon. Pilot: one configurable Delhi-NCR school. Roadmap: [.response/HawaHawai_Project_Phases.md](.response/HawaHawai_Project_Phases.md).
 
-Phases 0-2 remain operational. Phase 3 adds real Strands tool orchestration, constrained English/Hindi explanations, Gemini primary, configured Groq failover, and an explicit deterministic fallback. See the [Phase 3 checkpoint](.response/Phase_3_Checkpoint.md) for final verification status. Official station observations remain unavailable and current GRAP activation is **UNKNOWN**: documentary research is not a recorded human verification. Modeled US AQI never establishes an official stage. The `school-safety-v1` engine remains the only safety authority.
+Phases 0-3 remain operational. Phase 4 adds validated persistent school configuration, immutable decision history, current-record freshness checks and one non-AI daily planning schedule. See the [Phase 4 checkpoint](.response/Phase_4_Checkpoint.md) and [architecture](.response/Phase_4_Architecture.md). Official station observations remain unavailable and current GRAP activation is **UNKNOWN**: documentary research is not a recorded human verification. Modeled US AQI never establishes an official stage. The `school-safety-v1` engine remains the only safety authority. Phase 5 is not started.
 
 Local frontend: http://127.0.0.1:5173/
 
@@ -12,7 +12,7 @@ Deployed health: https://pu8l3a213j.execute-api.us-east-1.amazonaws.com/health
 
 ```text
 frontend/       React + TypeScript + Vite PWA shell
-backend/        Lambda/local adapter, environmental/safety/advisory services; private .env
+backend/        Lambda/local adapter, environmental/safety/advisory/persistence; private .env
 agent/          Strands trusted tools, approved bilingual language, provider adapters
 infra/          TypeScript CDK stack
 contracts/      OpenAPI 3.1, school schema, fictional demo profile
@@ -62,7 +62,9 @@ node --import tsx --test frontend/tests/*.test.mjs
 .venv\Scripts\python.exe scripts/advisory_smoke.py
 .venv\Scripts\python.exe scripts/advisory_smoke.py --base http://127.0.0.1:18080
 .venv\Scripts\python.exe scripts/advisory_api_checks.py
-.venv\Scripts\python.exe scripts/audit_phase3.py
+.venv\Scripts\python.exe scripts/phase4_smoke.py
+.venv\Scripts\python.exe scripts/phase4_operations.py
+.venv\Scripts\python.exe scripts/audit_phase3.py --phase4
 ```
 
 Gemini's actual Strands explanation smoke passed on 2026-10-08 using real deployed school evidence. `scripts/advisory_smoke.py --local-provider` makes one bounded Gemini call using ignored local configuration. Groq failure handling is mock-tested; no Groq key is currently configured, so live Groq access remains unverified. Model access is account-specific; configure `HAWAHAWAI_GROQ_MODEL` with an available tool/JSON-capable model when adding a key. Bedrock is explicitly disabled, never selected implicitly.
@@ -75,6 +77,10 @@ All operations use profile `hawahawai`, region `us-east-1`, account `64943729952
 $env:AWS_PROFILE = 'hawahawai'
 $env:AWS_REGION = 'us-east-1'
 aws sts get-caller-identity --profile hawahawai --region us-east-1
+# On a clean checkout, prepare and package dependencies first (instructions below).
+# Private conditional profile initialization is required before the first Phase 4 deploy.
+python scripts/initialize_school.py
+python scripts/initialize_school.py --write
 npm run cdk -- synth HawaHawaiDev --profile hawahawai --quiet
 python scripts/check_template.py
 npm run cdk -- diff HawaHawaiDev --profile hawahawai --no-change-set
@@ -82,7 +88,9 @@ npm run cdk -- diff HawaHawaiDev --profile hawahawai --no-change-set
 npm run cdk -- deploy HawaHawaiDev --profile hawahawai --exclusively --require-approval never --outputs-file .local/cdk-outputs.json
 ```
 
-The same Python 3.12 ARM64 Lambda serves the six existing GET routes plus GET/POST advisory routes. It uses 512 MB memory, a 25-second timeout and the existing seven-day log group. The existing on-demand `hawahawai-dev-environment-cache` table also stores regulatory history and explanation plans. Lambda can read that table, but PutItem/UpdateItem are restricted to the configured school's key prefix; it cannot update regulatory keys. No DeleteItem, Scan, transaction or administrative permission is granted to Lambda. A new `hawahawai-dev-ai-credentials` secret grants only exact-resource GetSecretValue to this Lambda. Environmental TTL cleanup is separate from application freshness; registry records have no TTL. API throttle remains 5 requests/second, burst 10. There is no additional Lambda, table, scheduler, VPC, NAT, queue, Amplify deployment, Bedrock usage or paid provider subscription. Secrets Manager and Lambda have normal usage charges; these controls are not a spending ceiling.
+The same Python 3.12 ARM64 Lambda serves all existing routes plus read-only verdict history. It uses 512 MB memory, a 25-second timeout and the existing seven-day log group. The existing on-demand `hawahawai-dev-environment-cache` table now also stores a validated school profile, immutable decisions and current/daily pointers. Runtime reads are restricted to this school's environmental/advisory/verdict keys, exact profile and Delhi registry. PutItem/UpdateItem cannot modify the profile or registry. No DeleteItem, Scan, transaction or administrative permission is granted to Lambda. The existing `hawahawai-dev-ai-credentials` secret grants only exact-resource GetSecretValue. Profile/registry records have no TTL; environmental cleanup remains 24 hours and verdict history cleanup seven days, separate from application freshness. API throttle remains 5 requests/second, burst 10.
+
+One `hawahawai-dev-daily-verdict` EventBridge Scheduler job runs at **07:00 Asia/Kolkata (01:30 UTC)** using the existing Lambda and no AI calls. Delivery retry is at most one; the Lambda's separate asynchronous execution retry is also one, with both event-age limits set to 15 minutes. It creates a planning/history artifact; it does not make a five-minute verdict valid all day. Its role can invoke only the HawaHawai Lambda. No extra Lambda, table, secret, VPC, NAT, queue, Amplify deployment, Bedrock dependency or paid provider subscription was added. Scheduler and existing services have normal usage charges; these controls are not a spending ceiling. See the Phase 4 checkpoint for measured Lambda usage and pricing caveats.
 
 The project owner monitors AWS credit balance, expiry, and spending. No budget or billing-access change is requested. Credit verification is no longer a Phase 0 or deployment blocker, following the owner's instruction. The last read-only check returned `AccessDeniedException: IAM user access not activated`; credit coverage has not been independently confirmed.
 
@@ -90,7 +98,7 @@ For every deployment, reuse existing HawaHawai resources through updates to the 
 
 Standard CDK deployment publishes its HawaHawai stack template to the existing bootstrap bucket and uses existing deployment roles. It does not update/redeploy `CDKToolkit`. Never bootstrap, destroy, modify ChugLi, deploy unrelated stacks, or perform Git staging/commits/pushes/remote writes.
 
-`python scripts/isolation_snapshot.py before --phase phase3` captures a non-overwritable phase-specific baseline. `python scripts/isolation_snapshot.py after --phase phase3` compares protected Docker definitions and all existing images, unrelated stack templates/events/resources, ChugLi Lambda configurations, and Git HEAD/reflog/index. Do not overwrite previous baselines. HawaHawai-owned containers/networks can be updated; protected image tags/digests cannot. This checks observable definitions, not unrelated application data.
+`python scripts/isolation_snapshot.py before --phase phase4` captures a non-overwritable phase-specific baseline. `python scripts/isolation_snapshot.py after --phase phase4` compares protected Docker definitions and all existing images, unrelated stack templates/events/resources, ChugLi Lambda configurations, and Git HEAD/reflog/index. Do not overwrite previous baselines. HawaHawai-owned containers/networks can be updated; existing image tags/digests cannot. This checks observable definitions, not unrelated application data.
 
 ## Contracts and current limitations
 
@@ -102,9 +110,12 @@ Implemented endpoints:
 - [48-hour outlook](https://pu8l3a213j.execute-api.us-east-1.amazonaws.com/v1/schools/delhi-demo-school/forecast)
 - [GRAP verification state](https://pu8l3a213j.execute-api.us-east-1.amazonaws.com/v1/schools/delhi-demo-school/grap)
 - [Deterministic school recommendation](https://pu8l3a213j.execute-api.us-east-1.amazonaws.com/v1/schools/delhi-demo-school/verdict)
+- [Historical daily planning record (never current guidance)](https://pu8l3a213j.execute-api.us-east-1.amazonaws.com/v1/schools/delhi-demo-school/verdict/history)
 - [English/Hindi explanation (GET; POST also supported)](https://pu8l3a213j.execute-api.us-east-1.amazonaws.com/v1/schools/delhi-demo-school/advisory)
 
-The single source of school configuration is `contracts/demo-school.json`. CDK supplies it to Lambda and the frontend imports its non-secret public profile. Coordinates are validated; arbitrary locations, force-refresh parameters and unknown schools are rejected. The school is fictional, not a real pilot partner.
+`contracts/demo-school.json` is the schema-validated bootstrap/fictional frontend demo input. AWS runtime configuration comes from the required persisted `school#delhi-demo-school#profile` record. `scripts/initialize_school.py` privately initializes it; changing an existing record requires a matching fingerprint and conditional write. Missing/corrupt records fail closed with 503. Complete school identity and coordinates invalidate environmental, decision and advisory fingerprints. Arbitrary schools/locations, public profile updates and force-refresh parameters are rejected. The school is fictional, not a real pilot partner.
+
+`/verdict` always reevaluates Phase 2 before considering stored current advice. Reuse preserves the original deadline. Optional `persistence` metadata identifies storage status; it does not replace safety evidence. `/verdict/history?date=YYYY-MM-DD` or `?record_id=<64-hex-id>` returns validated, explicitly historical and non-actionable records, including an expiry flag. Grade/activity scopes remain supported. No unrestricted refresh/admin route exists.
 
 `observations` stays empty when official station readings cannot be verified. `modeled_current` is explicitly modeled; legacy `pollutants`/`aqi` fields alias it, not official observations. Each value has a source ID, forecast timestamp, units or AQI scale, `source_type=model_forecast`, and `observed_at=null`. Missing pollutants are omitted with warnings, never replaced with zero. `generated_at=null` means the model run time was not supplied. UTC API timestamps are shown as IST in the frontend. US AQI must never be used as Indian AQI or directly compared with GRAP thresholds.
 
@@ -141,10 +152,14 @@ The only new service is one backend credential secret. It has normal Secrets Man
 Before synthesis on a new checkout, prepare Linux ARM64 dependencies (Windows dependency resolution is not suitable because it selects Windows-only markers):
 
 ```powershell
-docker run --rm --name hawahawai-runtime-packager --cpus 1 --memory 768m --mount "type=bind,source=C:\path\to\HawaHawai,target=/workspace" -w /workspace python@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f python -m pip install --target .local/phase3-dependencies-aarch64 --platform manylinux2014_aarch64 --python-version 3.12 --implementation cp --only-binary=:all: --no-compile -r backend/requirements-runtime.txt
+.venv\Scripts\python.exe scripts/prepare_runtime.py
 .venv\Scripts\python.exe scripts/package_lambda.py
 # After source edits, refresh the generated source without deleting dependency data:
 .venv\Scripts\python.exe scripts/package_lambda.py --refresh
 ```
 
-Review `cdk diff` before each named-stack deployment. `scripts/check_template.py` rejects stale bundled source, unexpected resources/IAM and embedded secrets. After the CDK-owned empty secret exists, `scripts/publish_ai_credentials.py` privately populates it from ignored local configuration, guarded by account/stack ownership. Never put keys in CLI arguments, CDK context, logs or templates. Historical Phase 1/2 AWS audits encode their old route/resource counts; use `audit_phase3.py` for the current deployed stack.
+The runtime preparer verifies Docker, reuses an already available image without pulling/retagging, uses a uniquely named owned temporary container and refuses an existing output directory. On another machine supply `--base-image` with an available compatible Python 3.12 image. Packaging generates `.local/lambda-bundle` and verifies all native libraries are Linux ARM64. Clean-checkout synthesis therefore does not depend on untracked prebuilt files. Stop only this project's Vite server if Windows locks npm's native module during `npm ci`; do not stop unrelated processes.
+
+Review `cdk diff` before each named-stack deployment. `scripts/check_template.py` rejects stale bundled source, unexpected resources/IAM and embedded secrets. The existing backend secret is reused; `scripts/publish_ai_credentials.py` remains the private, ownership-guarded credential update workflow. Never put keys in CLI arguments, CDK context, logs or templates. Historical audits encode their old route/resource counts; use `audit_phase3.py --phase4`, `phase4_smoke.py` and `phase4_operations.py` for the current stack. `phase4_smoke.py --expiry` verifies an earlier real record only after its natural deadline; it does not manufacture production fixtures.
+
+Known tooling finding: `npm audit` reports a high-severity transitive `brace-expansion` advisory inside the pinned CDK library. It is not bundled into the frontend or Lambda; a reviewed upstream CDK dependency update remains follow-up work. Do not use forced upgrades or weaken dependency locks just to suppress the audit. Groq live access still requires a backend-only key; current official regulation still requires actual human verification.

@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "HawaHawai API contracts",
-    "version": "0.3.0",
-    "description": "Phase 3: constrained Strands bilingual explanations. Phase 2 owns all authoritative safety fields. No public regulatory updates."
+    "version": "0.4.0",
+    "description": "Phase 4: persisted school and verdict history. Current requests always revalidate Phase 2 authority; no public force-refresh or administrative mutation."
   },
   "paths": {
     "/health": {
@@ -656,6 +656,106 @@
           },
           "503": {
             "description": "Invalid, stale, unknown or unavailable request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/schools/{school_id}/verdict/history": {
+      "get": {
+        "operationId": "getVerdictHistory",
+        "x-implemented": true,
+        "description": "Retained daily/identified historical planning record. Never actionable current guidance.",
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"
+            }
+          },
+          {
+            "name": "grade",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "activity",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "assembly",
+                "sports",
+                "physical_education",
+                "other",
+                "indoor"
+              ]
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "record_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historical only",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerdictHistory"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, missing or unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid, missing or unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Invalid, missing or unavailable",
             "content": {
               "application/json": {
                 "schema": {
@@ -1879,6 +1979,9 @@
               "window_start",
               "window_end"
             ]
+          },
+          "persistence": {
+            "$ref": "#/components/schemas/VerdictPersistence"
           }
         },
         "required": [
@@ -2590,6 +2693,174 @@
           "authority",
           "published_on",
           "scope"
+        ]
+      },
+      "VerdictPersistence": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "stored",
+              "reused",
+              "repaired",
+              "unavailable",
+              "corrupt",
+              "busy"
+            ]
+          },
+          "storage_version": {
+            "const": "verdict-record-v1"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "historical": {
+            "const": false
+          }
+        },
+        "required": [
+          "status",
+          "storage_version",
+          "record_id",
+          "historical"
+        ]
+      },
+      "VerdictRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "storage_version": {
+            "const": "verdict-record-v1"
+          },
+          "school_id": {
+            "const": "delhi-demo-school"
+          },
+          "record_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "profile_fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "semantic_fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "context": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "jurisdiction": {
+                "const": "NCT_DELHI"
+              },
+              "grade": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 12
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "activity": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "assembly",
+                  "sports",
+                  "physical_education",
+                  "other",
+                  "indoor"
+                ]
+              }
+            },
+            "required": [
+              "jurisdiction",
+              "grade",
+              "activity"
+            ]
+          },
+          "local_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "ON_DEMAND",
+              "SCHEDULED"
+            ]
+          },
+          "decision": {
+            "$ref": "#/components/schemas/Verdict"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "storage_version",
+          "school_id",
+          "record_id",
+          "profile_fingerprint",
+          "semantic_fingerprint",
+          "context",
+          "local_date",
+          "origin",
+          "decision",
+          "created_at"
+        ]
+      },
+      "VerdictHistory": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "school_id": {
+            "type": "string"
+          },
+          "status": {
+            "const": "historical"
+          },
+          "actionable": {
+            "const": false
+          },
+          "retrieved_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expired": {
+            "type": "boolean"
+          },
+          "matches_current_profile": {
+            "type": "boolean"
+          },
+          "record": {
+            "$ref": "#/components/schemas/VerdictRecord"
+          }
+        },
+        "required": [
+          "school_id",
+          "status",
+          "actionable",
+          "retrieved_at",
+          "expired",
+          "matches_current_profile",
+          "record"
         ]
       },
       "LocalizedAction": {

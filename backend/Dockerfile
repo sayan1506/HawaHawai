@@ -10,6 +10,7 @@ COPY backend/app.py backend/local_server.py ./
 COPY backend/environmental ./environmental
 COPY backend/safety ./safety
 COPY backend/advisory ./advisory
+COPY backend/persistence ./persistence
 COPY agent ./agent
 USER 10001:10001
 EXPOSE 8000

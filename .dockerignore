@@ -10,6 +10,8 @@
 !backend/safety/**
 !backend/advisory/
 !backend/advisory/**
+!backend/persistence/
+!backend/persistence/**
 !agent/
 !agent/**
 **/__pycache__/

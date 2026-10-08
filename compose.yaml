@@ -1,7 +1,7 @@
 name: hawahawai-dev
 services:
   backend:
-    image: hawahawai-backend:phase3-final-compact
+    image: hawahawai-backend:phase4-storage-v4
     container_name: hawahawai-backend-dev
     build:
       context: .

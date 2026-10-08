@@ -104,6 +104,15 @@ def main():
             "activity": enum("all", "assembly", "sports", "physical_education", "other", "indoor"), "window_start": TIME, "window_end": TIME})}
     schemas["Verdict"]["properties"].update(extension)
     schemas["Verdict"]["required"] += list(extension)
+    schemas["VerdictPersistence"] = obj({"status": enum("stored", "reused", "repaired", "unavailable", "corrupt", "busy"),
+        "storage_version": {"const": "verdict-record-v1"}, "record_id": NULLABLE({"type": "string", "pattern": "^[a-f0-9]{64}$"}), "historical": {"const": False}})
+    schemas["Verdict"]["properties"]["persistence"] = ref("VerdictPersistence")
+    schemas["VerdictRecord"] = obj({"storage_version": {"const": "verdict-record-v1"}, "school_id": {"const": "delhi-demo-school"},
+        "record_id": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "profile_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "semantic_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "context": obj({k:v for k,v in extension["activity_context"]["properties"].items() if k not in {"window_start","window_end"}}),
+        "local_date": {"type": "string", "format": "date"}, "origin": enum("ON_DEMAND", "SCHEDULED"), "decision": ref("Verdict"), "created_at": TIME})
+    schemas["VerdictHistory"] = obj({"school_id": STRING, "status": {"const": "historical"}, "actionable": {"const": False},
+        "retrieved_at": TIME, "expired": {"type": "boolean"}, "matches_current_profile": {"type": "boolean"}, "record": ref("VerdictRecord")})
     localized = json.loads(json.dumps(schemas["Action"]))
     localized["properties"].update(en=STRING, hi=STRING)
     localized["required"] += ["en", "hi"]
@@ -138,7 +147,14 @@ def main():
         "requestBody": {"required": True, "content": {"application/json": {"schema": ref("AdvisoryRequest")}}},
         "responses": {"200": {"description": "Bilingual advisory", "content": {"application/json": {"schema": ref("Advisory")}}}, **{str(code): {"description": "Invalid, stale, unknown or unavailable request", "content": {"application/json": {"schema": ref("Error")}}} for code in (400,404,409,503)}},
     }
-    document = {"openapi": "3.1.0", "info": {"title": "HawaHawai API contracts", "version": "0.3.0", "description": "Phase 3: constrained Strands bilingual explanations. Phase 2 owns all authoritative safety fields. No public regulatory updates."}, "paths": paths, "components": {"schemas": schemas}}
+    paths["/v1/schools/{school_id}/verdict/history"] = {"get": {"operationId": "getVerdictHistory", "x-implemented": True,
+        "description": "Retained daily/identified historical planning record. Never actionable current guidance.",
+        "parameters": paths["/v1/schools/{school_id}/verdict"]["get"]["parameters"] + [
+            {"name": "date", "in": "query", "schema": {"type": "string", "format": "date"}},
+            {"name": "record_id", "in": "query", "schema": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}],
+        "responses": {"200": {"description": "Historical only", "content": {"application/json": {"schema": ref("VerdictHistory")}}},
+            **{str(code): {"description": "Invalid, missing or unavailable", "content": {"application/json": {"schema": ref("Error")}}} for code in (400,404,503)}}}}
+    document = {"openapi": "3.1.0", "info": {"title": "HawaHawai API contracts", "version": "0.4.0", "description": "Phase 4: persisted school and verdict history. Current requests always revalidate Phase 2 authority; no public force-refresh or administrative mutation."}, "paths": paths, "components": {"schemas": schemas}}
     target = ROOT / "contracts/openapi.json"
     target.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
     print(f"Generated {target.relative_to(ROOT)}")

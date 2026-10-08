@@ -101,6 +101,9 @@ def explain(school, service, context=None, lambda_context=None, requested_verdic
     else:
         warnings.append("AI_BUSY_OR_INSUFFICIENT_TIME_DETERMINISTIC_EXPLANATION")
     # Always re-evaluate trusted inputs after AI. A slow model cannot preserve an expired verdict.
+    if os.environ.get('HAWAHAWAI_PROFILE_STORAGE_REQUIRED') == 'true':
+        from environmental.config import school_profile
+        school = school_profile(service.cache)
     latest = verdict(school, service, context=context)
     if fingerprint(latest) != digest or instant(decision["valid_until"]) <= datetime.now(timezone.utc):
         plan, provider = None, "rule_template"

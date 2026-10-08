@@ -9,6 +9,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as scheduler from 'aws-cdk-lib/aws-scheduler';
 
 export class DevStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps) {
@@ -26,11 +27,16 @@ export class DevStack extends Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, timeToLiveAttribute: 'expires_at',
       removalPolicy: RemovalPolicy.RETAIN,
     });
-    role.addToPolicy(new iam.PolicyStatement({actions: ['dynamodb:GetItem'], resources: [cache.tableArn]}));
     const schoolProfile = JSON.parse(readFileSync(resolve(__dirname, '../../contracts/demo-school.json'), 'utf8'));
     if (!/^[a-z0-9-]+$/.test(schoolProfile.school_id)) throw new Error('Invalid cache-key prefix');
+    const writableKeys = [`${schoolProfile.school_id}#????????????#*`, `${schoolProfile.school_id}#advisory#*`, `${schoolProfile.school_id}#verdict#*`];
+    role.addToPolicy(new iam.PolicyStatement({actions: ['dynamodb:GetItem'], resources: [cache.tableArn],
+      conditions: {'ForAllValues:StringLike': {'dynamodb:LeadingKeys': [...writableKeys, `school#${schoolProfile.school_id}#profile`, 'regulatory#NCT_DELHI#*']}}}));
     role.addToPolicy(new iam.PolicyStatement({actions: ['dynamodb:PutItem', 'dynamodb:UpdateItem'], resources: [cache.tableArn],
-      conditions: {'ForAllValues:StringLike': {'dynamodb:LeadingKeys': [`${schoolProfile.school_id}#*`]}}}));
+      conditions: {'ForAllValues:StringLike': {'dynamodb:LeadingKeys': writableKeys}}}));
+    const scheduleGroupName = 'hawahawai-dev-planning';
+    const scheduleName = 'hawahawai-dev-daily-verdict';
+    const scheduleArn = `arn:aws:scheduler:${this.region}:${this.account}:schedule/${scheduleGroupName}/${scheduleName}`;
     const aiCredentials = new secretsmanager.CfnSecret(this, 'AiCredentials', {
       name: 'hawahawai-dev-ai-credentials', description: 'HawaHawai backend-only Gemini/Groq credentials; populated out of band.',
     });
@@ -39,16 +45,23 @@ export class DevStack extends Stack {
     const health = new lambda.Function(this, 'HealthFunction', {
       functionName: 'hawahawai-dev-health', runtime: lambda.Runtime.PYTHON_3_12,
       architecture: lambda.Architecture.ARM_64, handler: 'app.handler',
-      code: lambda.Code.fromAsset(resolve(__dirname, '../../.local/phase3-lambda-bundle')),
+      code: lambda.Code.fromAsset(resolve(__dirname, '../../.local/lambda-bundle')),
       // SDK imports are CPU-bound. This avoids 25s cold-start timeouts observed at 256 MB.
       memorySize: 512, timeout: Duration.seconds(25), role, logGroup,
       environment: {HAWAHAWAI_ENV: 'dev', HAWAHAWAI_CACHE_TABLE: cache.tableName,
         HAWAHAWAI_SCHOOL_PROFILE_JSON: readFileSync(resolve(__dirname, '../../contracts/demo-school.json'), 'utf8'),
+        HAWAHAWAI_PROFILE_STORAGE_REQUIRED: 'true', HAWAHAWAI_DAILY_SCHEDULE_ARN: scheduleArn,
         HAWAHAWAI_VERIFICATION_ENABLED: this.node.tryGetContext('phase1Verification') === 'true' ? 'true' : 'false',
         HAWAHAWAI_AI_SECRET_ARN: aiCredentials.ref, HAWAHAWAI_AI_PROVIDER: 'gemini',
         HAWAHAWAI_GEMINI_MODEL: 'gemini-2.5-flash', HAWAHAWAI_GROQ_MODEL: 'llama-3.3-70b-versatile'},
     });
     const defaultPolicy = role.node.findChild('DefaultPolicy').node.defaultChild as iam.CfnPolicy;
+    // Scheduler delivery retries and Lambda asynchronous execution retries are
+    // independent. Bound both; don't retain failed planning events for six hours.
+    new lambda.CfnEventInvokeConfig(this, 'PlanningAsyncConfig', {
+      functionName: health.functionName, qualifier: '$LATEST',
+      maximumRetryAttempts: 1, maximumEventAgeInSeconds: 900,
+    });
     defaultPolicy.policyName = 'hawahawai-dev-health-logs';
     const api = new apigw.HttpApi(this, 'Api', {
       apiName: 'hawahawai-dev-api', createDefaultStage: false,
@@ -60,7 +73,7 @@ export class DevStack extends Stack {
     });
     api.addRoutes({path: '/health', methods: [apigw.HttpMethod.GET], integration: new HttpLambdaIntegration('HealthIntegration', health)});
     const environmentIntegration = new HttpLambdaIntegration('EnvironmentIntegration', health);
-    for (const path of ['/v1/schools/{school_id}', '/v1/schools/{school_id}/air', '/v1/schools/{school_id}/forecast', '/v1/schools/{school_id}/grap', '/v1/schools/{school_id}/verdict']) {
+    for (const path of ['/v1/schools/{school_id}', '/v1/schools/{school_id}/air', '/v1/schools/{school_id}/forecast', '/v1/schools/{school_id}/grap', '/v1/schools/{school_id}/verdict', '/v1/schools/{school_id}/verdict/history']) {
       api.addRoutes({path, methods: [apigw.HttpMethod.GET], integration: environmentIntegration});
     }
     api.addRoutes({path: '/v1/schools/{school_id}/advisory', methods: [apigw.HttpMethod.GET, apigw.HttpMethod.POST], integration: environmentIntegration});
@@ -71,5 +84,20 @@ export class DevStack extends Stack {
     new CfnOutput(this, 'ApiBaseUrl', {value: api.apiEndpoint});
     new CfnOutput(this, 'HealthUrl', {value: `${api.apiEndpoint}/health`});
     new CfnOutput(this, 'HealthFunctionName', {value: health.functionName});
+    const planningGroup = new scheduler.CfnScheduleGroup(this, 'PlanningGroup', {name: scheduleGroupName});
+    const plannerRole = new iam.Role(this, 'PlanningRole', {roleName: 'hawahawai-dev-planning-role',
+      assumedBy: new iam.ServicePrincipal('scheduler.amazonaws.com', {conditions: {StringEquals: {
+        'aws:SourceAccount': this.account, 'aws:SourceArn': planningGroup.attrArn}}})});
+    plannerRole.addToPolicy(new iam.PolicyStatement({actions: ['lambda:InvokeFunction'], resources: [health.functionArn]}));
+    (plannerRole.node.findChild('DefaultPolicy').node.defaultChild as iam.CfnPolicy).policyName = 'hawahawai-dev-planning-invoke';
+    const refreshTime = this.node.tryGetContext('phase4RefreshTime') ?? '07:00';
+    if (!/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/.test(refreshTime)) throw new Error('Invalid planning time');
+    const [hour, minute] = refreshTime.split(':');
+    new scheduler.CfnSchedule(this, 'DailyPlanning', {name: scheduleName, groupName: planningGroup.ref,
+      scheduleExpression: `cron(${Number(minute)} ${Number(hour)} * * ? *)`, scheduleExpressionTimezone: 'Asia/Kolkata',
+      flexibleTimeWindow: {mode: 'OFF'}, state: 'ENABLED',
+      target: {arn: health.functionArn, roleArn: plannerRole.roleArn, retryPolicy: {maximumEventAgeInSeconds: 900, maximumRetryAttempts: 1},
+        input: JSON.stringify({job: 'hawahawai.daily-verdict.v1', school_id: schoolProfile.school_id,
+          schedule_arn: '<aws.scheduler.schedule-arn>', scheduled_time: '<aws.scheduler.scheduled-time>'})}});
   }
 }

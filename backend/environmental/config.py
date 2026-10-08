@@ -19,7 +19,13 @@ def coordinates(latitude, longitude):
             raise ValueError("Invalid coordinates")
 
 
-def school_profile() -> School:
+def school_profile(cache=None) -> School:
+    if os.environ.get("HAWAHAWAI_PROFILE_STORAGE_REQUIRED") == "true":
+        from persistence.models import read_profile
+        if cache is None:
+            from .service import get_service
+            cache = get_service().cache
+        return read_profile(cache)
     raw = os.environ.get("HAWAHAWAI_SCHOOL_PROFILE_JSON")
     school = json.loads(raw) if raw else json.loads((Path(__file__).resolve().parents[2] / "contracts/demo-school.json").read_text())
     coordinates(school.get("latitude"), school.get("longitude"))

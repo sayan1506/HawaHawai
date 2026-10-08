@@ -18,7 +18,7 @@ def regulatory_status(school, evaluation_time, context, cache=None):
         return status
 
 
-def verdict(school, environmental_service, evaluation_time=None, context=None):
+def verdict(school, environmental_service, evaluation_time=None, context=None, origin="ON_DEMAND"):
     context = context or ActivityContext()
     inputs = []
     for kind in ("current", "forecast"):
@@ -30,4 +30,14 @@ def verdict(school, environmental_service, evaluation_time=None, context=None):
     # incorrectly rejected as evidence retrieved in the evaluator's future.
     now = instant(evaluation_time) if evaluation_time is not None else datetime.now(timezone.utc)
     regulatory = regulatory_status(school, now, context, environmental_service.cache)
-    return evaluate(school, *inputs, regulatory, now, context)
+    decision = evaluate(school, *inputs, regulatory, now, context)
+    from persistence.service import persist
+    result = persist(school, environmental_service.cache, decision, context, origin, now)
+    if evaluation_time is None and instant(result['valid_until']) <= datetime.now(timezone.utc):
+        # Storage IO may cross an input/hour boundary. Reevaluate once with the
+        # already fetched evidence and a fresh regulatory read, never renew old data.
+        now = datetime.now(timezone.utc)
+        regulatory = regulatory_status(school, now, context, environmental_service.cache)
+        fresh = evaluate(school, *inputs, regulatory, now, context)
+        result = persist(school, environmental_service.cache, fresh, context, origin, now)
+    return result

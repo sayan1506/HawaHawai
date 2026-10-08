@@ -6,6 +6,10 @@ from datetime import datetime, timezone
 
 
 def handler(event, context):
+    if "job" in event and not any(key in event for key in ("rawPath", "path", "httpMethod", "requestContext")):
+        from environmental.service import get_service
+        from persistence.scheduler import refresh
+        return refresh(event, get_service())
     path = event.get("rawPath") or event.get("path", "/")
     method = event.get("requestContext", {}).get("http", {}).get("method") or event.get("httpMethod", "GET")
     if path == "/health" and method == "GET":
@@ -16,7 +20,7 @@ def handler(event, context):
             "version": "0.0.0", "phase": 0,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-    elif (method == "GET" or (method == "POST" and path.endswith("/advisory"))) and re.fullmatch(r"/v1/schools/[a-z0-9-]+(?:/(?:air|forecast|grap|verdict|advisory))?", path):
+    elif (method == "GET" or (method == "POST" and path.endswith("/advisory"))) and re.fullmatch(r"/v1/schools/[a-z0-9-]+(?:/(?:air|forecast|grap|verdict(?:/history)?|advisory))?", path):
         from environmental.config import school_profile, coordinates
         from environmental.service import get_service
         from environmental.cache import CacheError
@@ -26,8 +30,10 @@ def handler(event, context):
             except (ValueError, OSError, TypeError):
                 raise RuntimeError("SCHOOL_CONFIGURATION_INVALID") from None
             params = event.get("queryStringParameters") or {}
-            phase2 = path.endswith(("/grap", "/verdict", "/advisory"))
+            history = path.endswith("/verdict/history")
+            phase2 = history or path.endswith(("/grap", "/verdict", "/advisory"))
             allowed = {"latitude", "longitude", "grade", "activity"} if phase2 else {"latitude", "longitude"}
+            if history: allowed |= {"date", "record_id"}
             if set(params) - allowed or ("latitude" in params) != ("longitude" in params):
                 raise ValueError("Unsupported or incomplete request parameters")
             if "latitude" in params:
@@ -58,10 +64,23 @@ def handler(event, context):
                             raise ValueError("Invalid advisory request")
                         requested = request["verdict_id"]
                     body = explain(school, service, activity_context, context, requested_verdict=requested)
+                elif history:
+                    from persistence.service import historical
+                    from persistence.models import IST
+                    date, record_id = params.get("date"), params.get("record_id")
+                    if date and record_id: raise ValueError("Choose date or record ID")
+                    if record_id is not None and not re.fullmatch(r"[a-f0-9]{64}", record_id): raise ValueError("Invalid record ID")
+                    if date is not None:
+                        from datetime import date as calendar_date, timedelta
+                        parsed = calendar_date.fromisoformat(date)
+                        today = evaluation_time.astimezone(IST).date()
+                        if parsed.isoformat() != date or not today - timedelta(days=7) <= parsed <= today: raise ValueError("Invalid history date")
+                    body = historical(school, service.cache, activity_context, date, record_id)
                 else:
                     body = (regulatory_status(school, evaluation_time, activity_context, service.cache)
                             if path.endswith("/grap") else verdict(school, service, context=activity_context))
-                status = 200  # Unknown/insufficient is a valid, explicit policy outcome.
+                status = 200
+                if body is None: status, body = 404, {"error": {"code": "HISTORY_NOT_FOUND", "message": "No retained record for this school/date/context"}}
             elif path.endswith("/air") or path.endswith("/forecast"):
                 body = get_service().get(school, "current" if path.endswith("/air") else "forecast")
                 status = 503 if body["status"] == "unavailable" else 200

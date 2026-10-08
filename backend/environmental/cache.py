@@ -46,6 +46,13 @@ class MemoryCache:
         with self.mutex:
             self.items[key] = copy.deepcopy(item)
 
+    def put_record(self, key, item, revision=None):
+        with self.mutex:
+            old = self.items.get(key)
+            if old is not None and (revision is None or old.get("revision_epoch", 0) >= revision): return False
+            self.items[key] = copy.deepcopy(item)
+            return True
+
     def acquire(self, key, now):
         with self.mutex:
             if self.items.get(key, {}).get("lease_until", 0) > now:
@@ -93,6 +100,21 @@ class DynamoCache:
             if getattr(error, "response", {}).get("Error", {}).get("Code") == "ConditionalCheckFailedException":
                 return None
             raise cache_failure("CACHE_LOCK_FAILED", error) from None
+
+    def put_record(self, key, item, revision=None):
+        values = {"cache_key": {"S": key}, "payload": {"S": encode_payload(item)},
+                  "expires_at": {"N": str(int(time.time()) + 7 * 86400)}}
+        arguments = {"TableName": self.table, "Item": values, "ConditionExpression": "attribute_not_exists(cache_key)"}
+        if revision is not None:
+            values["revision_epoch"] = {"N": str(revision)}
+            arguments.update(ConditionExpression="attribute_not_exists(revision_epoch) OR revision_epoch < :revision",
+                             ExpressionAttributeValues={":revision": {"N": str(revision)}})
+        try:
+            self.client.put_item(**arguments)
+            return True
+        except Exception as error:
+            if getattr(error, "response", {}).get("Error", {}).get("Code") == "ConditionalCheckFailedException": return False
+            raise cache_failure("RECORD_WRITE_FAILED", error) from None
 
     def release(self, key, token):
         try:
