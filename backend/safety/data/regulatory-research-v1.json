@@ -1,0 +1,21 @@
+{
+  "version": "research-2026-10-08-v1",
+  "schedule_version": "grap-2026-09-28-revision-pending-full-order-review",
+  "jurisdiction": "NCT_DELHI",
+  "simulation": false,
+  "verification": null,
+  "events": [],
+  "restrictions": [],
+  "notes": [
+    "Current stage UNKNOWN. No human verification has been recorded; neither AQI nor the latest visible historical order establishes today's stage.",
+    "PIB reports September 2026 revisions. Full operative revised schedule, effective date and complete subsequent order history require human review; the November 2025 schedule is historical, not assumed current.",
+    "Historical Delhi hybrid-class circulars do not establish current school restrictions. Grade-specific applicability and later revocations must be reviewed.",
+    "The September sports rescheduling advisory is not an automatic legal ban on ordinary school PE or a closure order."
+  ],
+  "documents": [
+    {"document_id": "caqm-schedule-2025-11-21", "title": "Implementation of revised GRAP, 21 November 2025 (historical)", "authority": "CAQM", "url": "https://caqm.nic.in/WriteReadData/LINKS/GRAP%20Order47928aa8-d026-4478-9407-2eba0a328a2d.pdf", "published_on": "2025-11-21", "document_type": "SCHEDULE", "access_status": "UNAVAILABLE", "sha256": null, "effective_from": null, "effective_until": null},
+    {"document_id": "pib-grap-revision-2026-09-29", "title": "CAQM Approves Revised GRAP Schedule; Tightens Measures for Vehicles, Dust and Pollution Control", "authority": "MoEFCC / PIB Delhi reporting CAQM", "url": "https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2316597&lang=2&reg=48", "published_on": "2026-09-29", "document_type": "PRESS_RELEASE", "access_status": "RESEARCHED", "sha256": null, "effective_from": null, "effective_until": null},
+    {"document_id": "delhi-school-circular-2026-01-20", "title": "Resumption of normal classes VI-IX and XI; hybrid classes up to V (historical)", "authority": "Directorate of Education, GNCT Delhi", "url": "https://edustud.nic.in/upload/upload_2025_26/Schoolbranch_regardingresumptionofnormalclassesinschoolsforclasses6to9and11_dt_20012026_56.pdf", "published_on": "2026-01-20", "document_type": "SCHOOL_ORDER", "access_status": "RESEARCHED", "sha256": "4771b584f42eeda9af0bf03601bd4aec972688fc5945410e157ce9b24c72cd37", "effective_from": null, "effective_until": null},
+    {"document_id": "delhi-revocation-2026-01-22", "title": "Revocation of GRAP III measures and normal physical classes for all students (historical)", "authority": "Directorate of Education / enclosed CAQM order", "url": "https://edustud.nic.in/upload/upload_2025_26/Schoolbranch_RegardingRevocationofGRAPIIIMeasures_dt_22012026_62.pdf", "published_on": "2026-01-22", "document_type": "REVOCATION", "access_status": "RESEARCHED", "sha256": "090ed0b8c86f8f1464da205209b87d1f8c181ccbac88c8ffabd621c8f869fd7a", "effective_from": null, "effective_until": null}
+  ]
+}

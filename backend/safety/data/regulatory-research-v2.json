@@ -1,0 +1,23 @@
+{
+  "version": "research-2026-10-08-v2",
+  "schedule_version": "grap-2026-09-29",
+  "jurisdiction": "NCT_DELHI",
+  "simulation": false,
+  "verification": null,
+  "events": [],
+  "restrictions": [],
+  "notes": [
+    "Current stage UNKNOWN: no human verification action is recorded and the complete activation/revocation and Delhi school-order history through today has not been attested.",
+    "CAQM Direction 104 of 29 September 2026 makes the revised schedule immediately applicable upon official stage invocation. November 2025 rules are historical, not assumed current.",
+    "Current schedule school clauses are source-hash-bound in a separate catalog. They cannot become mandatory live claims without fresh human verification and official invocation evidence.",
+    "Historical January Delhi circulars do not establish current school restrictions; subsequent orders and grade applicability require review.",
+    "Advisory 18 of 10 September 2026 addresses November-December physical sports scheduling. It is not a claimed current mandatory PE ban or school closure."
+  ],
+  "documents": [
+    {"document_id": "caqm-schedule-2026-09-29", "title": "Revised Graded Response Action Plan for NCR, 29 September 2026", "authority": "CAQM", "url": "https://caqm.nic.in/FileUploadDomain/WebsiteDocument/GRAP/GRAP%20Schedule/01fcdebf-83e1-4cfe-bc0c-d0b1470a4d4e.pdf", "published_on": "2026-09-29", "document_type": "SCHEDULE", "access_status": "RESEARCHED", "sha256": "473e245b758c68be776b1d732be288abdbb5bd9084abf8fcdde9bcd3afcfa413", "effective_from": null, "effective_until": null},
+    {"document_id": "caqm-direction-104-2026-09-29", "title": "Direction 104: revised GRAP schedule with immediate effect and invocation requirement", "authority": "CAQM", "url": "https://caqm.nic.in/FileUploadDomain/WebsiteDocument/Advisories%20and%20Direction/Directions/fa4070ca-5b45-4161-b220-0871227ae9ea.pdf", "published_on": "2026-09-29", "document_type": "SCHEDULE", "access_status": "RESEARCHED", "sha256": "b258399cdc8c7f3ac009fb23bb19f8da557df1eff6094f6e8849610a17286d5b", "effective_from": null, "effective_until": null},
+    {"document_id": "caqm-advisory-18-2026-09-10", "title": "Advisory 18: rescheduling physical sports competitions in November-December", "authority": "CAQM", "url": "https://caqm.nic.in/FileUploadDomain/WebsiteDocument/Advisories%20and%20Direction/Advisories/a68ffad1-874d-4e7d-a366-e3ec9f97be0e.pdf", "published_on": "2026-09-10", "document_type": "ADVISORY", "access_status": "RESEARCHED", "sha256": "2f6f7bbfecd4094565c27f47fe0e483b1ae2e84ad523438d2d88a3cf9e422417", "effective_from": null, "effective_until": null},
+    {"document_id": "delhi-school-circular-2026-01-20", "title": "Normal classes VI-IX and XI; hybrid up to V (historical)", "authority": "Directorate of Education, GNCT Delhi", "url": "https://edustud.nic.in/upload/upload_2025_26/Schoolbranch_regardingresumptionofnormalclassesinschoolsforclasses6to9and11_dt_20012026_56.pdf", "published_on": "2026-01-20", "document_type": "SCHOOL_ORDER", "access_status": "RESEARCHED", "sha256": "4771b584f42eeda9af0bf03601bd4aec972688fc5945410e157ce9b24c72cd37", "effective_from": null, "effective_until": null},
+    {"document_id": "delhi-revocation-2026-01-22", "title": "Revocation of GRAP III; normal physical classes for all students (historical)", "authority": "Directorate of Education / enclosed CAQM order", "url": "https://edustud.nic.in/upload/upload_2025_26/Schoolbranch_RegardingRevocationofGRAPIIIMeasures_dt_22012026_62.pdf", "published_on": "2026-01-22", "document_type": "REVOCATION", "access_status": "RESEARCHED", "sha256": "090ed0b8c86f8f1464da205209b87d1f8c181ccbac88c8ffabd621c8f869fd7a", "effective_from": null, "effective_until": null}
+  ]
+}

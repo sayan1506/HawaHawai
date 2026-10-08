@@ -5,6 +5,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 HAWAHAWAI_BIND=0.0.0.0
 COPY app.py local_server.py ./
 COPY environmental ./environmental
+COPY safety ./safety
 USER 10001:10001
 EXPOSE 8000
 CMD ["python", "local_server.py"]

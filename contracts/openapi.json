@@ -2,15 +2,15 @@
   "openapi": "3.1.0",
   "info": {
     "title": "HawaHawai API contracts",
-    "version": "0.1.0",
-    "description": "Phase 1: health, pilot school, modeled current evidence and forecast implemented. Official station observations unavailable. Safety and advisory routes remain planned."
+    "version": "0.2.0",
+    "description": "Phase 2: read-only regulatory registry and deterministic school policy. Unknown official status is explicit. No AI advisory or stage inference."
   },
   "paths": {
     "/health": {
       "get": {
         "operationId": "getHealth",
         "x-implemented": true,
-        "description": "Phase 1 environmental evidence or Phase 0 liveness; no school-safety verdict.",
+        "description": "Phase 0/1-compatible evidence or Phase 2 read-only deterministic policy.",
         "responses": {
           "200": {
             "description": "Health",
@@ -66,7 +66,7 @@
       "get": {
         "operationId": "getSchoolProfile",
         "x-implemented": true,
-        "description": "Phase 1 environmental evidence or Phase 0 liveness; no school-safety verdict.",
+        "description": "Phase 0/1-compatible evidence or Phase 2 read-only deterministic policy.",
         "responses": {
           "200": {
             "description": "SchoolProfile",
@@ -133,7 +133,7 @@
       "get": {
         "operationId": "getAirReading",
         "x-implemented": true,
-        "description": "Phase 1 environmental evidence or Phase 0 liveness; no school-safety verdict.",
+        "description": "Phase 0/1-compatible evidence or Phase 2 read-only deterministic policy.",
         "responses": {
           "200": {
             "description": "AirReading",
@@ -200,7 +200,7 @@
       "get": {
         "operationId": "getForecast",
         "x-implemented": true,
-        "description": "Phase 1 environmental evidence or Phase 0 liveness; no school-safety verdict.",
+        "description": "Phase 0/1-compatible evidence or Phase 2 read-only deterministic policy.",
         "responses": {
           "200": {
             "description": "Forecast",
@@ -292,11 +292,102 @@
         }
       }
     },
+    "/v1/schools/{school_id}/grap": {
+      "get": {
+        "operationId": "getGrapStatus",
+        "x-implemented": true,
+        "description": "Phase 0/1-compatible evidence or Phase 2 read-only deterministic policy.",
+        "responses": {
+          "200": {
+            "description": "GrapStatus",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrapStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable evidence or cache",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GrapStatus"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "school_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"
+            }
+          },
+          {
+            "name": "grade",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "activity",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "assembly",
+                "sports",
+                "physical_education",
+                "other",
+                "indoor"
+              ]
+            }
+          }
+        ]
+      }
+    },
     "/v1/schools/{school_id}/verdict": {
       "get": {
         "operationId": "getVerdict",
-        "x-implemented": false,
-        "description": "Planned contract only; not deployed.",
+        "x-implemented": true,
+        "description": "Phase 0/1-compatible evidence or Phase 2 read-only deterministic policy.",
         "responses": {
           "200": {
             "description": "Verdict",
@@ -317,6 +408,33 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable evidence or cache",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/Verdict"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "parameters": [
@@ -327,6 +445,30 @@
             "schema": {
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"
+            }
+          },
+          {
+            "name": "grade",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "activity",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "assembly",
+                "sports",
+                "physical_education",
+                "other",
+                "indoor"
+              ]
             }
           }
         ]
@@ -1205,6 +1347,87 @@
             "items": {
               "$ref": "#/components/schemas/Source"
             }
+          },
+          "active_stage": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verification_state": {
+            "type": "string",
+            "enum": [
+              "VERIFIED_ACTIVE",
+              "VERIFIED_INACTIVE",
+              "UNKNOWN",
+              "STALE",
+              "CONFLICTING"
+            ]
+          },
+          "verification_expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "applicable_restrictions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Restriction"
+            }
+          },
+          "unverified_restrictions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Restriction"
+            }
+          },
+          "source_documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegulatoryDocument"
+            }
+          },
+          "snapshot_version": {
+            "type": "string"
+          },
+          "schedule_version": {
+            "type": "string"
+          },
+          "evaluation_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "verification_action_recorded": {
+            "type": "boolean"
+          },
+          "next_transition_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -1215,7 +1438,19 @@
           "order_url",
           "jurisdiction",
           "restrictions",
-          "sources"
+          "sources",
+          "active_stage",
+          "verification_state",
+          "verification_expires_at",
+          "applicable_restrictions",
+          "unverified_restrictions",
+          "source_documents",
+          "snapshot_version",
+          "schedule_version",
+          "evaluation_time",
+          "verification_action_recorded",
+          "next_transition_at",
+          "warnings"
         ],
         "allOf": [
           {
@@ -1267,7 +1502,10 @@
               "assembly",
               "sports",
               "physical_education",
-              "other"
+              "other",
+              "indoor",
+              "administration",
+              "parent_communication"
             ]
           },
           "instruction": {
@@ -1284,13 +1522,48 @@
             "items": {
               "type": "string"
             }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "VERIFY_BEFORE_PROCEEDING",
+              "NORMAL_WITH_CAVEATS",
+              "MODIFY",
+              "INDOOR_ALTERNATIVE",
+              "ASSESS_INDOOR_ALTERNATIVE",
+              "VERIFY_STATUS",
+              "REVIEW_ORDERS",
+              "HYBRID_CLASSES",
+              "SUSPEND_OUTDOOR",
+              "SUSPEND_PHYSICAL_CLASSES",
+              "REVIEW_ORDER",
+              "RESCHEDULE_SPORTS",
+              "AVOID_OUTDOOR_ADVISORY",
+              "STRUCTURED_REASONS_READY",
+              "REVIEW_SCHOOL_OPERATIONS",
+              "FOLLOW_PHYSICAL_CLASS_ORDER"
+            ]
+          },
+          "mandatory": {
+            "type": "boolean"
+          },
+          "applicable_grades": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            }
           }
         },
         "required": [
           "activity",
           "instruction",
           "rule_ids",
-          "evidence_ids"
+          "evidence_ids",
+          "recommendation",
+          "mandatory",
+          "applicable_grades"
         ]
       },
       "Verdict": {
@@ -1369,6 +1642,128 @@
             "items": {
               "type": "string"
             }
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "GO_OUTDOORS",
+              "MODIFIED_OUTDOORS",
+              "INDOOR_ONLY",
+              "DATA_INSUFFICIENT"
+            ]
+          },
+          "evaluation_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "policy_version": {
+            "type": "string"
+          },
+          "decision_id": {
+            "type": "string"
+          },
+          "regulatory_status": {
+            "$ref": "#/components/schemas/GrapStatus"
+          },
+          "rule_evaluations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleEvaluation"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionEvidence"
+            }
+          },
+          "policy_sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PolicySource"
+            }
+          },
+          "requires_regulatory_verification": {
+            "type": "boolean"
+          },
+          "data_quality": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "official_observations_available": {
+                "type": "boolean"
+              },
+              "station_observations_available": {
+                "type": "boolean"
+              },
+              "modeled_data_available": {
+                "type": "boolean"
+              },
+              "forecast_available": {
+                "type": "boolean"
+              },
+              "current_freshness": {
+                "type": "string"
+              },
+              "forecast_freshness": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "official_observations_available",
+              "station_observations_available",
+              "modeled_data_available",
+              "forecast_available",
+              "current_freshness",
+              "forecast_freshness"
+            ]
+          },
+          "activity_context": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "jurisdiction": {
+                "const": "NCT_DELHI"
+              },
+              "grade": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 12
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "activity": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "assembly",
+                  "sports",
+                  "physical_education",
+                  "other",
+                  "indoor"
+                ]
+              },
+              "window_start": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "window_end": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "jurisdiction",
+              "grade",
+              "activity",
+              "window_start",
+              "window_end"
+            ]
           }
         },
         "required": [
@@ -1383,7 +1778,18 @@
           "actions",
           "evidence_ids",
           "sources",
-          "warnings"
+          "warnings",
+          "decision",
+          "evaluation_time",
+          "policy_version",
+          "decision_id",
+          "regulatory_status",
+          "rule_evaluations",
+          "evidence",
+          "policy_sources",
+          "requires_regulatory_verification",
+          "data_quality",
+          "activity_context"
         ],
         "allOf": [
           {
@@ -1558,6 +1964,341 @@
           "source_url",
           "retrieved_at",
           "warnings"
+        ]
+      },
+      "RegulatoryDocument": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "document_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "authority": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "published_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "document_type": {
+            "type": "string",
+            "enum": [
+              "SCHEDULE",
+              "ACTIVATION",
+              "REVOCATION",
+              "SCHOOL_ORDER",
+              "ADVISORY",
+              "PRESS_RELEASE"
+            ]
+          },
+          "access_status": {
+            "type": "string",
+            "enum": [
+              "RESEARCHED",
+              "UNAVAILABLE",
+              "HUMAN_REVIEWED"
+            ]
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effective_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effective_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verification_status": {
+            "type": "string",
+            "enum": [
+              "HUMAN_REVIEWED",
+              "UNVERIFIED"
+            ]
+          }
+        },
+        "required": [
+          "document_id",
+          "title",
+          "authority",
+          "url",
+          "published_on",
+          "document_type",
+          "access_status",
+          "sha256",
+          "effective_from",
+          "effective_until",
+          "verification_status"
+        ]
+      },
+      "Restriction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "restriction_id": {
+            "type": "string"
+          },
+          "document_id": {
+            "type": "string"
+          },
+          "clause": {
+            "type": "string"
+          },
+          "jurisdiction": {
+            "const": "NCT_DELHI"
+          },
+          "grades": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            }
+          },
+          "activity": {
+            "type": "string",
+            "enum": [
+              "all",
+              "assembly",
+              "sports",
+              "physical_education",
+              "other",
+              "administration"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "HYBRID_CLASSES",
+              "SUSPEND_OUTDOOR",
+              "SUSPEND_PHYSICAL_CLASSES",
+              "REVIEW_ORDER",
+              "RESCHEDULE_SPORTS",
+              "AVOID_OUTDOOR_ADVISORY"
+            ]
+          },
+          "mandatory": {
+            "type": "boolean"
+          },
+          "effective_from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "effective_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minimum_stage": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revoked_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "restriction_id",
+          "document_id",
+          "clause",
+          "jurisdiction",
+          "grades",
+          "activity",
+          "action",
+          "mandatory",
+          "effective_from",
+          "effective_until",
+          "minimum_stage",
+          "revoked_by"
+        ]
+      },
+      "RuleEvaluation": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "rule_id": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "message": {
+            "type": "string"
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "rule_id",
+          "priority",
+          "message",
+          "evidence_ids"
+        ]
+      },
+      "DecisionEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "evidence_id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "station_observation",
+              "modeled_current",
+              "activity_forecast"
+            ]
+          },
+          "freshness": {
+            "const": "fresh"
+          },
+          "value": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 500
+          },
+          "scale": {
+            "const": "US_AQI"
+          },
+          "source_id": {
+            "type": "string"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "measurement",
+              "model_forecast"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pollutants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Pollutant"
+            }
+          },
+          "station_location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "evidence_id",
+          "kind",
+          "freshness",
+          "value",
+          "scale",
+          "source_id",
+          "source_type",
+          "timestamp",
+          "pollutants",
+          "station_location"
+        ]
+      },
+      "PolicySource": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "evidence_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "authority": {
+            "type": "string"
+          },
+          "published_on": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence_id",
+          "title",
+          "url",
+          "authority",
+          "published_on",
+          "scope"
         ]
       }
     }

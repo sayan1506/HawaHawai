@@ -4,3 +4,7 @@
 !Dockerfile
 !environmental/
 !environmental/*.py
+!safety/
+!safety/*.py
+!safety/data/
+!safety/data/*.json

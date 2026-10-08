@@ -29,7 +29,7 @@ export function EnvironmentalView() {
   }, [attempt]);
   return <section className="card" aria-labelledby="environment"><h2 id="environment">Phase 1 environmental evidence</h2>
     <p>{school.name} · {school.latitude}, {school.longitude} · {school.timezone}</p>
-    <p>No school-safety verdict. US AQI is not Indian AQI. Forecasts are not monitoring-station observations.</p>
+    <p>This section supplies evidence, not a verdict. US AQI is not Indian AQI. Forecasts are not monitoring-station observations.</p>
     <div role="status" aria-live="polite">{error || (!air && 'Loading environmental evidence…')}</div>
     <button onClick={() => setAttempt(v => v + 1)}>Reload evidence</button>
     {air && <><h3>Official station observations: unavailable</h3><p>No official Indian AQI or station readings have been verified.</p>

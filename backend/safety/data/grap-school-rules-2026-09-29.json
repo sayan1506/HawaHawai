@@ -1,0 +1,18 @@
+{
+  "catalog_version": "grap-school-clauses-2026-09-29-v1",
+  "schedule_version": "grap-2026-09-29",
+  "source_url": "https://caqm.nic.in/FileUploadDomain/WebsiteDocument/GRAP/GRAP%20Schedule/01fcdebf-83e1-4cfe-bc0c-d0b1470a4d4e.pdf",
+  "source_sha256": "473e245b758c68be776b1d732be288abdbb5bd9084abf8fcdde9bcd3afcfa413",
+  "activation_requirement": "No clause applies merely because this catalog exists. A fresh recorded human review of the matching original schedule and official invocation/revocation history is required.",
+  "rules": [
+    {"restriction_id": "GRAP_2026_III_8_DELHI_HYBRID", "clause": "Stage III action 8(i), page 14: provide physical and feasible online classes up to V; students/guardians choose online where available. Delhi pilot only; no automatic closure or outdoor ban.", "jurisdiction": "NCT_DELHI", "grades": [0,1,2,3,4,5], "activity": "administration", "action": "HYBRID_CLASSES", "mandatory": true, "minimum_stage": 3},
+    {"restriction_id": "GRAP_2026_IV_4_DELHI_HYBRID", "clause": "Stage IV action 4(i), pages 16-17: extend feasible hybrid classes to VI-IX and XI, preserving students/guardians' online choice. Stage III primary requirements remain cumulative; X and XII are not added by this clause.", "jurisdiction": "NCT_DELHI", "grades": [6,7,8,9,11], "activity": "administration", "action": "HYBRID_CLASSES", "mandatory": true, "minimum_stage": 4},
+    {"restriction_id": "GRAP_2026_IV_CHILDREN_ADVISORY", "clause": "Stage IV Citizen Charter, page 17: children are advised to avoid outdoor activities and stay indoors where possible. HawaHawai adopts indoor alternatives as precaution, not as a legal outdoor ban or school closure.", "jurisdiction": "NCT_DELHI", "grades": [0,1,2,3,4,5,6,7,8,9,10,11,12], "activity": "all", "action": "AVOID_OUTDOOR_ADVISORY", "mandatory": false, "minimum_stage": 4}
+  ],
+  "scope_notes": [
+    "Mandatory hybrid clauses also name Gurugram, Faridabad, Ghaziabad and Gautam Buddha Nagar; other NCR areas are discretionary. This MVP implements only NCT Delhi.",
+    "Stage IV action 5 allows governments to consider additional measures; it does not automatically close schools. A separate applicable reviewed school order is required.",
+    "No stage I/II school closure or blanket outdoor prohibition is manufactured. Separate school orders can still override the general schedule.",
+    "Grade zero represents pre-primary for project applicability, not a new official class number."
+  ]
+}

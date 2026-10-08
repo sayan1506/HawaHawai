@@ -25,7 +25,11 @@ export class DevStack extends Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST, timeToLiveAttribute: 'expires_at',
       removalPolicy: RemovalPolicy.RETAIN,
     });
-    role.addToPolicy(new iam.PolicyStatement({actions: ['dynamodb:GetItem', 'dynamodb:PutItem', 'dynamodb:UpdateItem'], resources: [cache.tableArn]}));
+    role.addToPolicy(new iam.PolicyStatement({actions: ['dynamodb:GetItem'], resources: [cache.tableArn]}));
+    const schoolProfile = JSON.parse(readFileSync(resolve(__dirname, '../../contracts/demo-school.json'), 'utf8'));
+    if (!/^[a-z0-9-]+$/.test(schoolProfile.school_id)) throw new Error('Invalid cache-key prefix');
+    role.addToPolicy(new iam.PolicyStatement({actions: ['dynamodb:PutItem', 'dynamodb:UpdateItem'], resources: [cache.tableArn],
+      conditions: {'ForAllValues:StringLike': {'dynamodb:LeadingKeys': [`${schoolProfile.school_id}#*`]}}}));
     const health = new lambda.Function(this, 'HealthFunction', {
       functionName: 'hawahawai-dev-health', runtime: lambda.Runtime.PYTHON_3_12,
       architecture: lambda.Architecture.ARM_64, handler: 'app.handler',
@@ -47,7 +51,7 @@ export class DevStack extends Stack {
     });
     api.addRoutes({path: '/health', methods: [apigw.HttpMethod.GET], integration: new HttpLambdaIntegration('HealthIntegration', health)});
     const environmentIntegration = new HttpLambdaIntegration('EnvironmentIntegration', health);
-    for (const path of ['/v1/schools/{school_id}', '/v1/schools/{school_id}/air', '/v1/schools/{school_id}/forecast']) {
+    for (const path of ['/v1/schools/{school_id}', '/v1/schools/{school_id}/air', '/v1/schools/{school_id}/forecast', '/v1/schools/{school_id}/grap', '/v1/schools/{school_id}/verdict']) {
       api.addRoutes({path, methods: [apigw.HttpMethod.GET], integration: environmentIntegration});
     }
     new apigw.HttpStage(this, 'DevStage', {

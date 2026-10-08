@@ -66,14 +66,54 @@ def main():
     schemas["AirReading"]["required"] += ["observations", "observation_providers", "modeled_current"]
     schemas["Forecast"]["properties"].update({"horizon_hours": {"const": 48}, "forecast_start": NULLABLE(TIME), "forecast_end": NULLABLE(TIME)})
     schemas["Forecast"]["required"] += ["horizon_hours", "forecast_start", "forecast_end"]
+    schemas["RegulatoryDocument"] = obj({"document_id": STRING, "title": STRING, "authority": STRING, "url": URI,
+        "published_on": {"type": "string", "format": "date"}, "document_type": enum("SCHEDULE", "ACTIVATION", "REVOCATION", "SCHOOL_ORDER", "ADVISORY", "PRESS_RELEASE"),
+        "access_status": enum("RESEARCHED", "UNAVAILABLE", "HUMAN_REVIEWED"), "sha256": NULLABLE(STRING),
+        "effective_from": NULLABLE(TIME), "effective_until": NULLABLE(TIME), "verification_status": enum("HUMAN_REVIEWED", "UNVERIFIED")})
+    schemas["Restriction"] = obj({"restriction_id": STRING, "document_id": STRING, "clause": STRING,
+        "jurisdiction": {"const": "NCT_DELHI"}, "grades": ARRAY({"type": "integer", "minimum": 0, "maximum": 12}),
+        "activity": enum("all", "assembly", "sports", "physical_education", "other", "administration"),
+        "action": enum("HYBRID_CLASSES", "SUSPEND_OUTDOOR", "SUSPEND_PHYSICAL_CLASSES", "REVIEW_ORDER", "RESCHEDULE_SPORTS", "AVOID_OUTDOOR_ADVISORY"),
+        "mandatory": {"type": "boolean"}, "effective_from": TIME, "effective_until": NULLABLE(TIME),
+        "minimum_stage": NULLABLE({"type": "integer", "minimum": 1, "maximum": 4}), "revoked_by": NULLABLE(STRING)})
+    extension = {"active_stage": NULLABLE({"type": "integer", "minimum": 1, "maximum": 4}),
+        "verification_state": enum("VERIFIED_ACTIVE", "VERIFIED_INACTIVE", "UNKNOWN", "STALE", "CONFLICTING"),
+        "verification_expires_at": NULLABLE(TIME), "applicable_restrictions": ARRAY(ref("Restriction")), "unverified_restrictions": ARRAY(ref("Restriction")),
+        "source_documents": ARRAY(ref("RegulatoryDocument")), "snapshot_version": STRING, "schedule_version": STRING,
+        "evaluation_time": TIME, "verification_action_recorded": {"type": "boolean"}, "next_transition_at": NULLABLE(TIME), "warnings": ARRAY(STRING)}
+    schemas["GrapStatus"]["properties"].update(extension)
+    schemas["GrapStatus"]["required"] += list(extension)
+    action = {"recommendation": enum("VERIFY_BEFORE_PROCEEDING", "NORMAL_WITH_CAVEATS", "MODIFY", "INDOOR_ALTERNATIVE", "ASSESS_INDOOR_ALTERNATIVE", "VERIFY_STATUS", "REVIEW_ORDERS", "HYBRID_CLASSES", "SUSPEND_OUTDOOR", "SUSPEND_PHYSICAL_CLASSES", "REVIEW_ORDER", "RESCHEDULE_SPORTS", "AVOID_OUTDOOR_ADVISORY", "STRUCTURED_REASONS_READY", "REVIEW_SCHOOL_OPERATIONS", "FOLLOW_PHYSICAL_CLASS_ORDER"), "mandatory": {"type": "boolean"}, "applicable_grades": ARRAY({"type": "integer", "minimum": 0, "maximum": 12})}
+    schemas["Action"]["properties"]["activity"] = enum("assembly", "sports", "physical_education", "other", "indoor", "administration", "parent_communication")
+    schemas["Action"]["properties"].update(action)
+    schemas["Action"]["required"] += list(action)
+    schemas["RuleEvaluation"] = obj({"rule_id": STRING, "priority": {"type": "integer", "minimum": 1, "maximum": 6}, "message": STRING, "evidence_ids": ARRAY(STRING)})
+    schemas["DecisionEvidence"] = obj({"evidence_id": STRING, "kind": enum("station_observation", "modeled_current", "activity_forecast"),
+        "freshness": {"const": "fresh"}, "value": {"type": "number", "minimum": 0, "maximum": 500}, "scale": {"const": "US_AQI"},
+        "source_id": STRING, "source_type": enum("measurement", "model_forecast"), "timestamp": TIME,
+        "pollutants": ARRAY(ref("Pollutant")), "station_location": NULLABLE(ref("SourceLocation"))})
+    schemas["PolicySource"] = obj({"evidence_id": STRING, "title": STRING, "url": URI, "authority": STRING, "published_on": NULLABLE(STRING), "scope": STRING})
+    extension = {"decision": enum("GO_OUTDOORS", "MODIFIED_OUTDOORS", "INDOOR_ONLY", "DATA_INSUFFICIENT"),
+        "evaluation_time": TIME, "policy_version": STRING, "decision_id": STRING,
+        "regulatory_status": ref("GrapStatus"), "rule_evaluations": ARRAY(ref("RuleEvaluation")),
+        "evidence": ARRAY(ref("DecisionEvidence")), "policy_sources": ARRAY(ref("PolicySource")),
+        "requires_regulatory_verification": {"type": "boolean"},
+        "data_quality": obj({"official_observations_available": {"type": "boolean"}, "station_observations_available": {"type": "boolean"},
+            "modeled_data_available": {"type": "boolean"}, "forecast_available": {"type": "boolean"}, "current_freshness": STRING, "forecast_freshness": STRING}),
+        "activity_context": obj({"jurisdiction": {"const": "NCT_DELHI"}, "grade": NULLABLE({"type": "integer", "minimum": 0, "maximum": 12}),
+            "activity": enum("all", "assembly", "sports", "physical_education", "other", "indoor"), "window_start": TIME, "window_end": TIME})}
+    schemas["Verdict"]["properties"].update(extension)
+    schemas["Verdict"]["required"] += list(extension)
     paths = {}
-    for path, name in [("/health", "Health"), ("/v1/schools/{school_id}", "SchoolProfile"), ("/v1/schools/{school_id}/air", "AirReading"), ("/v1/schools/{school_id}/forecast", "Forecast"), ("/v1/grap", "GrapStatus"), ("/v1/schools/{school_id}/verdict", "Verdict"), ("/v1/schools/{school_id}/advisory", "Advisory")]:
-        planned = name not in {"Health", "SchoolProfile", "AirReading", "Forecast"}
+    for path, name in [("/health", "Health"), ("/v1/schools/{school_id}", "SchoolProfile"), ("/v1/schools/{school_id}/air", "AirReading"), ("/v1/schools/{school_id}/forecast", "Forecast"), ("/v1/grap", "GrapStatus"), ("/v1/schools/{school_id}/grap", "GrapStatus"), ("/v1/schools/{school_id}/verdict", "Verdict"), ("/v1/schools/{school_id}/advisory", "Advisory")]:
+        planned = name == "Advisory" or path == "/v1/grap"
         operation = {"operationId": f"get{name}", "x-implemented": not planned,
-                     "description": "Planned contract only; not deployed." if planned else "Phase 1 environmental evidence or Phase 0 liveness; no school-safety verdict.",
+                     "description": "Planned contract only; not deployed." if planned else "Phase 0/1-compatible evidence or Phase 2 read-only deterministic policy.",
                      "responses": {"200": {"description": name, "content": {"application/json": {"schema": ref(name)}}}, "404": {"description": "Not found", "content": {"application/json": {"schema": ref("Error")}}}}}
         if "{school_id}" in path:
             operation["parameters"] = [{"name": "school_id", "in": "path", "required": True, "schema": school["properties"]["school_id"]}]
+            if name in {"GrapStatus", "Verdict"} and not planned:
+                operation["parameters"] += [{"name": "grade", "in": "query", "schema": {"type": "integer", "minimum": 0, "maximum": 12}}, {"name": "activity", "in": "query", "schema": extension["activity_context"]["properties"]["activity"]}]
         paths[path] = {"get": operation}
         if not planned:
             operation["responses"]["400"] = {"description": "Invalid request", "content": {"application/json": {"schema": ref("Error")}}}
@@ -84,7 +124,7 @@ def main():
         "requestBody": {"required": True, "content": {"application/json": {"schema": ref("AdvisoryRequest")}}},
         "responses": {"200": {"description": "Bilingual advisory", "content": {"application/json": {"schema": ref("Advisory")}}}},
     }
-    document = {"openapi": "3.1.0", "info": {"title": "HawaHawai API contracts", "version": "0.1.0", "description": "Phase 1: health, pilot school, modeled current evidence and forecast implemented. Official station observations unavailable. Safety and advisory routes remain planned."}, "paths": paths, "components": {"schemas": schemas}}
+    document = {"openapi": "3.1.0", "info": {"title": "HawaHawai API contracts", "version": "0.2.0", "description": "Phase 2: read-only regulatory registry and deterministic school policy. Unknown official status is explicit. No AI advisory or stage inference."}, "paths": paths, "components": {"schemas": schemas}}
     target = ROOT / "contracts/openapi.json"
     target.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
     print(f"Generated {target.relative_to(ROOT)}")

@@ -15,6 +15,38 @@ export interface Evidence {
   cache: {status: string; fresh_until: string | null};
 }
 
+export interface GrapResponse {
+  verification_state: 'VERIFIED_ACTIVE' | 'VERIFIED_INACTIVE' | 'UNKNOWN' | 'STALE' | 'CONFLICTING';
+  active_stage: number | null; verified_at: string | null; verification_action_recorded: boolean;
+  schedule_version: string; snapshot_version: string; warnings: string[];
+  source_documents: {document_id: string; title: string; authority: string; url: string; published_on: string; verification_status: string}[];
+}
+export interface VerdictResponse {
+  school_id: string; decision: 'GO_OUTDOORS' | 'MODIFIED_OUTDOORS' | 'INDOOR_ONLY' | 'DATA_INSUFFICIENT';
+  policy_version: string; evaluation_time: string; valid_until: string; requires_regulatory_verification: boolean;
+  regulatory_status: GrapResponse; data_quality: {official_observations_available: boolean; modeled_data_available: boolean; forecast_available: boolean};
+  rule_evaluations: {rule_id: string; message: string}[];
+  actions: {activity: string; recommendation: string; instruction: string; mandatory: boolean; applicable_grades: number[]}[];
+  evidence: {evidence_id: string; value: number; scale: 'US_AQI'; source_type: string; source_id: string; timestamp: string; freshness: string}[];
+  policy_sources: {evidence_id: string; title: string; url: string; scope: string}[]; warnings: string[];
+}
+
+export async function getSafety(schoolId: string, kind: 'grap' | 'verdict', signal?: AbortSignal): Promise<GrapResponse | VerdictResponse> {
+  const base = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:18080').replace(/\/$/, '');
+  const response = await fetch(`${base}/v1/schools/${encodeURIComponent(schoolId)}/${kind}`, {signal, cache: 'no-store'});
+  if (!response.ok) throw new Error(`School policy API returned HTTP ${response.status}`);
+  const body = await response.json();
+  const regulatory = kind === 'grap' ? body : body?.regulatory_status;
+  if (!regulatory || !['VERIFIED_ACTIVE', 'VERIFIED_INACTIVE', 'UNKNOWN', 'STALE', 'CONFLICTING'].includes(regulatory.verification_state)
+    || !Array.isArray(regulatory.source_documents) || !Array.isArray(regulatory.warnings)
+    || (['UNKNOWN', 'STALE', 'CONFLICTING'].includes(regulatory.verification_state) && regulatory.active_stage !== null)) throw new Error('Unexpected regulatory schema');
+  if (kind === 'verdict' && (body.school_id !== schoolId || !['GO_OUTDOORS', 'MODIFIED_OUTDOORS', 'INDOOR_ONLY', 'DATA_INSUFFICIENT'].includes(body.decision)
+    || !Array.isArray(body.actions) || !Array.isArray(body.rule_evaluations) || !Array.isArray(body.evidence)
+    || Number.isNaN(Date.parse(body.evaluation_time)) || Number.isNaN(Date.parse(body.valid_until))
+    || (body.decision === 'GO_OUTDOORS' && (body.requires_regulatory_verification || !body.data_quality?.station_observations_available)))) throw new Error('Unexpected decision schema');
+  return body;
+}
+
 export async function getEvidence(schoolId: string, kind: 'air' | 'forecast', signal?: AbortSignal): Promise<Evidence> {
   const base = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:18080').replace(/\/$/, '');
   const response = await fetch(`${base}/v1/schools/${encodeURIComponent(schoolId)}/${kind}`, {signal, cache: 'no-store'});

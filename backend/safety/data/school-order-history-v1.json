@@ -1,0 +1,36 @@
+{
+  "catalog_version": "delhi-school-history-2026-10-08-v1",
+  "classification": "RESEARCH_ONLY_NOT_CURRENT_STATUS",
+  "human_verification_recorded": false,
+  "records": [
+    {
+      "document_id": "delhi-school-circular-2026-01-20",
+      "order_number": "DE.23(28)/Sch.Br./2026/56",
+      "jurisdiction": "NCT_DELHI",
+      "school_scope": "Government, government-aided and unaided recognized private schools of DoE, NDMC, MCD and Delhi Cantonment Board",
+      "publication_date": "2026-01-20",
+      "effective_period": "Immediate effect until further orders; subsequent 22 January circular resumes normal physical classes for all students. Exact issuance times were not established.",
+      "mandatory_historical_action": "Up to Class V: both physical and online classes where online mode is feasible. VI-IX and XI resume normal physical classes; X and XII continue physical classes.",
+      "hybrid_grades": [0, 1, 2, 3, 4, 5],
+      "later_document_id": "delhi-revocation-2026-01-22",
+      "caveat": "Hybrid does not mean school closure or an automatic outdoor ban. This historical circular must not be used as today's mandate."
+    },
+    {
+      "document_id": "delhi-revocation-2026-01-22",
+      "order_number": "DE.23(28)/Sch.Br./2026/62",
+      "jurisdiction": "NCT_DELHI",
+      "publication_date": "2026-01-22",
+      "mandatory_historical_action": "Normal physical classes for all students, with immediate effect; communicate the change to students, staff and parents.",
+      "effective_period": "From issuance; later orders through 8 October 2026 not completely verified.",
+      "caveat": "Enclosed CAQM order revokes Stage III while I and II remain. Neither this revocation nor physical classes establish today's GRAP state or outdoor air safety."
+    },
+    {
+      "document_id": "pib-grap-revision-2026-09-29",
+      "publication_date": "2026-09-29",
+      "classification": "OFFICIAL_REPORT_OF_REVISION_AND_ADVISORY",
+      "summary": "Reports GRAP revisions approved on 28 September and Advisory 18 of 10 September about appropriately rescheduling November-December NCR physical sports competitions based on pollution trends.",
+      "mandatory": false,
+      "caveat": "Subsequent research located the original 29 September schedule, Direction 104 and Advisory 18 under migrated CAQM URLs. See regulatory-research-v2 and the current school-clause catalog. No live mandatory action or activation is inferred without human verification."
+    }
+  ]
+}

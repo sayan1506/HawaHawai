@@ -17,15 +17,19 @@ for logical_id, resource in template["Resources"].items():
         assert set(props["Environment"]["Variables"]) == {"HAWAHAWAI_ENV", "HAWAHAWAI_CACHE_TABLE", "HAWAHAWAI_SCHOOL_PROFILE_JSON", "HAWAHAWAI_VERIFICATION_ENABLED"}
     if resource["Type"] == "AWS::IAM::Policy":
         for statement in props["PolicyDocument"]["Statement"]:
-            assert set(statement["Action"]) <= {"logs:CreateLogStream", "logs:PutLogEvents", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"}
+            actions = statement["Action"] if isinstance(statement["Action"], list) else [statement["Action"]]
+            assert set(actions) <= {"logs:CreateLogStream", "logs:PutLogEvents", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"}
             assert statement["Resource"] != "*"
             assert template["Resources"][statement["Resource"]["Fn::GetAtt"][0]]["Type"] in {"AWS::DynamoDB::Table", "AWS::Logs::LogGroup"}
+            if set(actions) & {"dynamodb:PutItem", "dynamodb:UpdateItem"}:
+                school = json.loads((ROOT / "contracts/demo-school.json").read_text())
+                assert statement["Condition"] == {"ForAllValues:StringLike": {"dynamodb:LeadingKeys": [school["school_id"] + "#*"]}}
 assert "ChugLi" not in json.dumps(template)
 assert "AWS::CloudFormation::Stack" not in json.dumps(template)
 assert sum(r['Type'] == 'AWS::DynamoDB::Table' for r in template['Resources'].values()) == 1
 assert sum(r['Type'] == 'AWS::Lambda::Function' for r in template['Resources'].values()) == 1
-assert sum(r['Type'] == 'AWS::ApiGatewayV2::Route' for r in template['Resources'].values()) == 4
+assert sum(r['Type'] == 'AWS::ApiGatewayV2::Route' for r in template['Resources'].values()) == 6
 for asset in (ROOT / 'infra/cdk.out').glob('asset.*'):
     if asset.is_dir():
         assert not any(p.name.startswith('.env') or p.suffix == '.pyc' for p in asset.rglob('*'))
-print("PASS: scoped Phase 1 resources, table-only DynamoDB IAM and secret-free assets")
+print("PASS: scoped Phase 2 routes, registry read-only runtime IAM and secret-free assets")

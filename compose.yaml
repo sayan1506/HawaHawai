@@ -1,7 +1,7 @@
 name: hawahawai-dev
 services:
   backend:
-    image: hawahawai-backend:phase1-optimized
+    image: hawahawai-backend:phase2-regulations-final
     container_name: hawahawai-backend-dev
     build:
       context: ./backend
