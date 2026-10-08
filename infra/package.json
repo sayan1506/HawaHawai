@@ -1,0 +1,6 @@
+{
+  "name": "hawahawai-infra", "version": "0.0.0", "private": true,
+  "scripts": {"build": "tsc --noEmit", "cdk": "cdk"},
+  "dependencies": {"aws-cdk-lib": "2.272.0", "constructs": "10.5.0"},
+  "devDependencies": {"aws-cdk": "2.1145.0", "@types/node": "22.18.0", "tsx": "4.20.6", "typescript": "5.9.3"}
+}

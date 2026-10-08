@@ -1,0 +1,1 @@
+{"app":"npx --no-install tsx infra/bin/app.ts","output":"infra/cdk.out","versionReporting":false,"pathMetadata":false,"assetMetadata":false,"context":{"@aws-cdk/core:checkSecretUsage":true}}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hawahawai.local/schemas/school-profile",
+  "title": "SchoolProfile", "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "school_id", "name", "city", "latitude", "longitude", "timezone", "languages", "is_demo"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "school_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+    "name": {"type": "string", "minLength": 1, "maxLength": 120, "pattern": "\\S"},
+    "city": {"enum": ["Delhi", "New Delhi", "Noida", "Greater Noida", "Ghaziabad", "Gurugram", "Faridabad"]},
+    "latitude": {"type": "number", "minimum": 27.8, "maximum": 29.5},
+    "longitude": {"type": "number", "minimum": 76.5, "maximum": 78.0},
+    "timezone": {"const": "Asia/Kolkata"},
+    "languages": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["en", "hi"]}},
+    "is_demo": {"type": "boolean"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  },
+  "description": "Pilot bounding box is an MVP input guard, not an official Delhi-NCR administrative boundary. No student/medical data."
+}

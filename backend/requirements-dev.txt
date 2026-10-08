@@ -1,0 +1,5 @@
+# Health Lambda and Docker service require only Python's standard library.
+# These dependencies are for contract checks and the local AI connectivity probe.
+strands-agents[gemini,openai]==1.58.1
+python-dotenv==1.1.1
+jsonschema==4.25.1

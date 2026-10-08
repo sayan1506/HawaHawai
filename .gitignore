@@ -1,1 +1,12 @@
 .response
+node_modules/
+dist/
+cdk.out/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+*.log
+.local/

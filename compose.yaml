@@ -1,0 +1,28 @@
+name: hawahawai-dev
+services:
+  backend:
+    image: hawahawai-backend:phase0
+    container_name: hawahawai-backend-dev
+    build:
+      context: ./backend
+    pull_policy: never
+    ports:
+      - "127.0.0.1:18080:8000"
+    environment:
+      HAWAHAWAI_ENV: local-docker
+    networks: [dev]
+    cpus: 0.5
+    mem_limit: 128m
+    pids_limit: 64
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+networks:
+  dev:
+    name: hawahawai-dev-network

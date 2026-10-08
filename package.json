@@ -1,0 +1,11 @@
+{
+  "name": "hawahawai", "version": "0.0.0", "private": true,
+  "engines": {"node": ">=22.12.0"},
+  "workspaces": ["frontend", "infra"],
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend && npm run build --workspace infra",
+    "check": "npm run check --workspace frontend && npm run build --workspace infra",
+    "cdk": "cdk"
+  }
+}
