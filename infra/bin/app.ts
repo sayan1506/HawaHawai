@@ -9,7 +9,7 @@ if (process.env.CDK_DEFAULT_REGION && process.env.CDK_DEFAULT_REGION !== 'us-eas
 const app = new App();
 const stack = new DevStack(app, 'HawaHawaiDev', {
   env: {account: expectedAccount, region: 'us-east-1'},
-  description: 'HawaHawai Phase 0 development health API',
+  description: 'HawaHawai development health and environmental evidence API',
 });
 Tags.of(stack).add('project', 'hawahawai');
 Tags.of(stack).add('environment', 'dev');

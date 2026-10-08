@@ -17,7 +17,7 @@ LOCAL = ROOT / ".local"
 
 def run(*args):
     result = subprocess.run(args, cwd=ROOT, text=True, capture_output=True, timeout=90,
-                            env={**os.environ, "AWS_PAGER": ""})
+                            env={**os.environ, "AWS_PAGER": "", "GIT_OPTIONAL_LOCKS": "0"})
     if result.returncode:
         raise RuntimeError(f"Read-only command failed: {' '.join(args[:3])} (exit {result.returncode})")
     return result.stdout.strip()
@@ -35,6 +35,8 @@ def docker_snapshot():
     containers = {}
     for container_id in run("docker", "ps", "-aq", "--no-trunc").splitlines():
         info = json.loads(run("docker", "inspect", container_id))[0]
+        if info["Name"].lstrip("/").startswith("hawahawai-"):
+            continue
         containers[container_id] = {
             "name": info["Name"].lstrip("/"), "image": info["Image"],
             "config_hash": digest(info["Config"]), "host_config_hash": digest(info["HostConfig"]),
@@ -48,6 +50,8 @@ def docker_snapshot():
     networks = {}
     for network_id in run("docker", "network", "ls", "-q", "--no-trunc").splitlines():
         info = json.loads(run("docker", "network", "inspect", network_id))[0]
+        if info["Name"].startswith("hawahawai-"):
+            continue
         networks[network_id] = {"name": info["Name"], "hash": digest(info)}
     volumes = {}
     for volume_name in run("docker", "volume", "ls", "-q").splitlines():
@@ -85,16 +89,18 @@ def snapshot():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", choices=["before", "after"])
+    parser.add_argument("--phase", default="", choices=["", "phase1"])
     args = parser.parse_args()
     LOCAL.mkdir(exist_ok=True)
     current = snapshot()
-    target = LOCAL / f"isolation-{args.mode}.json"
+    prefix = f"{args.phase}-" if args.phase else ""
+    target = LOCAL / f"{prefix}isolation-{args.mode}.json"
     if args.mode == "before" and target.exists():
         raise RuntimeError("Baseline already exists; refusing to overwrite it")
     target.write_text(json.dumps(current, indent=2) + "\n", encoding="utf-8")
     print(f"Captured {args.mode}: {len(current['docker']['containers'])} containers, {len(current['docker']['images'])} images, {len(current['docker']['networks'])} networks, {len(current['docker']['volumes'])} volumes")
     if args.mode == "after":
-        before = json.loads((LOCAL / "isolation-before.json").read_text(encoding="utf-8"))
+        before = json.loads((LOCAL / f"{prefix}isolation-before.json").read_text(encoding="utf-8"))
         differences = []
         order_only_differences = []
         for category, records in before["docker"].items():
@@ -123,7 +129,7 @@ def main():
                 if not names or any(not name.startswith("hawahawai-") for name in names):
                     differences.append(f"New Docker resource lacks prefix: {category} {key}")
         result = {"passed": not differences, "differences": differences, "order_only_differences": order_only_differences}
-        (LOCAL / "isolation-result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        (LOCAL / f"{prefix}isolation-result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
         return int(bool(differences))
     return 0

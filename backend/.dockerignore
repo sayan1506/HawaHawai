@@ -2,3 +2,5 @@
 !app.py
 !local_server.py
 !Dockerfile
+!environmental/
+!environmental/*.py

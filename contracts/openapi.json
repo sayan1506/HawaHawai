@@ -2,15 +2,15 @@
   "openapi": "3.1.0",
   "info": {
     "title": "HawaHawai API contracts",
-    "version": "0.0.0",
-    "description": "Phase 0: only /health is implemented. All /v1 routes are design contracts."
+    "version": "0.1.0",
+    "description": "Phase 1: health, pilot school, modeled current evidence and forecast implemented. Official station observations unavailable. Safety and advisory routes remain planned."
   },
   "paths": {
     "/health": {
       "get": {
         "operationId": "getHealth",
         "x-implemented": true,
-        "description": "Service liveness; does not assert air data or AI readiness.",
+        "description": "Phase 1 environmental evidence or Phase 0 liveness; no school-safety verdict.",
         "responses": {
           "200": {
             "description": "Health",
@@ -31,6 +31,33 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable evidence or cache",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/Health"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -38,8 +65,8 @@
     "/v1/schools/{school_id}": {
       "get": {
         "operationId": "getSchoolProfile",
-        "x-implemented": false,
-        "description": "Planned contract only; this route is not deployed in Phase 0.",
+        "x-implemented": true,
+        "description": "Phase 1 environmental evidence or Phase 0 liveness; no school-safety verdict.",
         "responses": {
           "200": {
             "description": "SchoolProfile",
@@ -57,6 +84,33 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable evidence or cache",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SchoolProfile"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
                 }
               }
             }
@@ -78,8 +132,8 @@
     "/v1/schools/{school_id}/air": {
       "get": {
         "operationId": "getAirReading",
-        "x-implemented": false,
-        "description": "Planned contract only; this route is not deployed in Phase 0.",
+        "x-implemented": true,
+        "description": "Phase 1 environmental evidence or Phase 0 liveness; no school-safety verdict.",
         "responses": {
           "200": {
             "description": "AirReading",
@@ -97,6 +151,33 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable evidence or cache",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/AirReading"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
                 }
               }
             }
@@ -118,8 +199,8 @@
     "/v1/schools/{school_id}/forecast": {
       "get": {
         "operationId": "getForecast",
-        "x-implemented": false,
-        "description": "Planned contract only; this route is not deployed in Phase 0.",
+        "x-implemented": true,
+        "description": "Phase 1 environmental evidence or Phase 0 liveness; no school-safety verdict.",
         "responses": {
           "200": {
             "description": "Forecast",
@@ -137,6 +218,33 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable evidence or cache",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/Forecast"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
                 }
               }
             }
@@ -159,7 +267,7 @@
       "get": {
         "operationId": "getGrapStatus",
         "x-implemented": false,
-        "description": "Planned contract only; this route is not deployed in Phase 0.",
+        "description": "Planned contract only; not deployed.",
         "responses": {
           "200": {
             "description": "GrapStatus",
@@ -188,7 +296,7 @@
       "get": {
         "operationId": "getVerdict",
         "x-implemented": false,
-        "description": "Planned contract only; this route is not deployed in Phase 0.",
+        "description": "Planned contract only; not deployed.",
         "responses": {
           "200": {
             "description": "Verdict",
@@ -228,7 +336,7 @@
       "get": {
         "operationId": "getAdvisory",
         "x-implemented": false,
-        "description": "Planned contract only; this route is not deployed in Phase 0.",
+        "description": "Planned contract only; not deployed.",
         "responses": {
           "200": {
             "description": "Advisory",
@@ -586,15 +694,42 @@
             "type": "string"
           },
           "observed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "forecast_for": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_type": {
             "type": "string",
-            "format": "date-time"
+            "enum": [
+              "measurement",
+              "model_forecast"
+            ]
           }
         },
         "required": [
           "value",
           "scale",
           "source_id",
-          "observed_at"
+          "observed_at",
+          "forecast_for",
+          "source_type"
         ]
       },
       "Pollutant": {
@@ -629,8 +764,36 @@
             "type": "string"
           },
           "observed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "forecast_for": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_type": {
             "type": "string",
-            "format": "date-time"
+            "enum": [
+              "measurement",
+              "model_forecast"
+            ]
+          },
+          "original_unit": {
+            "type": "string"
           }
         },
         "required": [
@@ -639,7 +802,10 @@
           "unit",
           "averaging_period",
           "source_id",
-          "observed_at"
+          "observed_at",
+          "forecast_for",
+          "source_type",
+          "original_unit"
         ]
       },
       "AirReading": {
@@ -680,6 +846,94 @@
             "items": {
               "type": "string"
             }
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "freshness_status": {
+            "type": "string",
+            "enum": [
+              "fresh",
+              "stale",
+              "unavailable"
+            ]
+          },
+          "data_quality": {
+            "type": "string",
+            "enum": [
+              "modeled_grid_estimate",
+              "unavailable"
+            ]
+          },
+          "cache": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "hit",
+                  "miss",
+                  "refreshed",
+                  "stale_fallback"
+                ]
+              },
+              "fresh_until": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "fresh_until"
+            ]
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ForecastPoint"
+            }
+          },
+          "observation_providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObservationProvider"
+            }
+          },
+          "modeled_current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ForecastPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -688,7 +942,16 @@
           "aqi",
           "pollutants",
           "sources",
-          "warnings"
+          "warnings",
+          "latitude",
+          "longitude",
+          "retrieved_at",
+          "freshness_status",
+          "data_quality",
+          "cache",
+          "observations",
+          "observation_providers",
+          "modeled_current"
         ]
       },
       "ForecastPoint": {
@@ -761,6 +1024,97 @@
             "items": {
               "type": "string"
             }
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "retrieved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "freshness_status": {
+            "type": "string",
+            "enum": [
+              "fresh",
+              "stale",
+              "unavailable"
+            ]
+          },
+          "data_quality": {
+            "type": "string",
+            "enum": [
+              "modeled_grid_estimate",
+              "unavailable"
+            ]
+          },
+          "cache": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "hit",
+                  "miss",
+                  "refreshed",
+                  "stale_fallback"
+                ]
+              },
+              "fresh_until": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "fresh_until"
+            ]
+          },
+          "horizon_hours": {
+            "const": 48
+          },
+          "forecast_start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "forecast_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -769,7 +1123,16 @@
           "generated_at",
           "points",
           "sources",
-          "warnings"
+          "warnings",
+          "latitude",
+          "longitude",
+          "retrieved_at",
+          "freshness_status",
+          "data_quality",
+          "cache",
+          "horizon_hours",
+          "forecast_start",
+          "forecast_end"
         ]
       },
       "GrapStatus": {
@@ -1145,6 +1508,56 @@
           "generator",
           "evidence_ids",
           "caveats"
+        ]
+      },
+      "ObservationProvider": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ForecastPoint"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "unavailable"
+            ]
+          },
+          "source_name": {
+            "type": "string"
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "measurement"
+            ]
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "retrieved_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "observations",
+          "status",
+          "source_name",
+          "source_type",
+          "source_url",
+          "retrieved_at",
+          "warnings"
         ]
       }
     }

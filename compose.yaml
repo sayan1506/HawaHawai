@@ -1,7 +1,7 @@
 name: hawahawai-dev
 services:
   backend:
-    image: hawahawai-backend:phase0
+    image: hawahawai-backend:phase1-optimized
     container_name: hawahawai-backend-dev
     build:
       context: ./backend
@@ -10,6 +10,8 @@ services:
       - "127.0.0.1:18080:8000"
     environment:
       HAWAHAWAI_ENV: local-docker
+    volumes:
+      - ./contracts:/contracts:ro
     networks: [dev]
     cpus: 0.5
     mem_limit: 128m

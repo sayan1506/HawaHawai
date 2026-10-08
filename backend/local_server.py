@@ -1,7 +1,7 @@
 """Local HTTP adapter. Production runs app.handler in AWS Lambda."""
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qsl
 from app import handler
 
 ALLOWED_ORIGINS = {"http://127.0.0.1:5173", "http://localhost:5173", "http://127.0.0.1:4173", "http://localhost:4173"}
@@ -15,7 +15,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_header("Vary", "Origin")
 
     def do_GET(self):
-        response = handler({"rawPath": urlsplit(self.path).path, "requestContext": {"http": {"method": "GET"}}}, None)
+        response = handler({"rawPath": urlsplit(self.path).path, "queryStringParameters": dict(parse_qsl(urlsplit(self.path).query, keep_blank_values=True)), "requestContext": {"http": {"method": "GET"}}}, None)
         self.send_response(response["statusCode"])
         self.cors()
         for key, value in response["headers"].items():

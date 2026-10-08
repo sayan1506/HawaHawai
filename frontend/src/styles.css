@@ -1,1 +1,8 @@
 *{box-sizing:border-box}body{margin:0;background:#f4f8f5;color:#173c35;font-family:Inter,system-ui,sans-serif}main{max-width:920px;margin:auto;padding:30px 24px 50px}header{display:flex;justify-content:space-between;align-items:center;gap:16px}.brand{font-weight:800;font-size:24px;letter-spacing:-1px}.badge{font-size:12px;padding:8px 12px;border:1px solid #bdd4c9;border-radius:20px}.intro{padding:70px 0 30px}.eyebrow{font-size:12px;letter-spacing:2px;font-weight:700;color:#477b68}h1{font-size:clamp(36px,6vw,62px);line-height:1.1;letter-spacing:-2px;margin:14px 0 24px}.intro>p:last-child{font-size:18px;line-height:1.7;max-width:610px;color:#526b63}.card{background:white;padding:24px;margin:20px 0;border-radius:18px;border:1px solid #d6e2da}h2{font-size:19px;margin-top:0}p{line-height:1.65}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#247c58;margin-right:10px}small{display:block;color:#526b63;margin-top:10px}button{border:0;border-radius:8px;background:#155e55;color:white;padding:12px 18px;margin-top:16px;cursor:pointer}button:focus-visible{outline:3px solid #d2a130;outline-offset:3px}footer{font-size:13px;color:#526b63;margin-top:30px}@media(max-width:480px){header{align-items:flex-start}.badge{max-width:130px;text-align:center}.intro{padding-top:48px}.card{padding:20px}}
+/* Minimal Phase 1 evidence verification, not the full application UI. */
+.reading { display: block; margin: .7rem 0; }
+.reading small { display: block; }
+.outlook { overflow: auto; max-height: 28rem; }
+table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+th, td { text-align: left; padding: .5rem; border-bottom: 1px solid #ddd; white-space: nowrap; }
+details { margin: 1rem 0; }
