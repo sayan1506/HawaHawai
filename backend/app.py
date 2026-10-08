@@ -16,7 +16,7 @@ def handler(event, context):
             "version": "0.0.0", "phase": 0,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-    elif method == "GET" and re.fullmatch(r"/v1/schools/[a-z0-9-]+(?:/(?:air|forecast|grap|verdict))?", path):
+    elif (method == "GET" or (method == "POST" and path.endswith("/advisory"))) and re.fullmatch(r"/v1/schools/[a-z0-9-]+(?:/(?:air|forecast|grap|verdict|advisory))?", path):
         from environmental.config import school_profile, coordinates
         from environmental.service import get_service
         from environmental.cache import CacheError
@@ -26,7 +26,7 @@ def handler(event, context):
             except (ValueError, OSError, TypeError):
                 raise RuntimeError("SCHOOL_CONFIGURATION_INVALID") from None
             params = event.get("queryStringParameters") or {}
-            phase2 = path.endswith(("/grap", "/verdict"))
+            phase2 = path.endswith(("/grap", "/verdict", "/advisory"))
             allowed = {"latitude", "longitude", "grade", "activity"} if phase2 else {"latitude", "longitude"}
             if set(params) - allowed or ("latitude" in params) != ("longitude" in params):
                 raise ValueError("Unsupported or incomplete request parameters")
@@ -46,16 +46,30 @@ def handler(event, context):
                 activity_context = ActivityContext(grade=int(grade) if grade is not None else None, activity=params.get("activity", "all"))
                 evaluation_time = datetime.now(timezone.utc)
                 service = get_service()
-                body = (regulatory_status(school, evaluation_time, activity_context, service.cache)
-                        if path.endswith("/grap") else verdict(school, service, context=activity_context))
+                if path.endswith("/advisory"):
+                    from advisory.service import explain
+                    requested = None
+                    if method == "POST":
+                        raw = event.get("body", "")
+                        if event.get("isBase64Encoded") or not isinstance(raw, str) or len(raw) > 1024:
+                            raise ValueError("Invalid advisory body")
+                        request = json.loads(raw)
+                        if not isinstance(request, dict) or set(request) != {"verdict_id", "languages"} or not isinstance(request["verdict_id"], str) or not request["verdict_id"] or not isinstance(request["languages"], list) or not request["languages"] or len(request["languages"]) != len(set(request["languages"])) or set(request["languages"]) - {"en", "hi"}:
+                            raise ValueError("Invalid advisory request")
+                        requested = request["verdict_id"]
+                    body = explain(school, service, activity_context, context, requested_verdict=requested)
+                else:
+                    body = (regulatory_status(school, evaluation_time, activity_context, service.cache)
+                            if path.endswith("/grap") else verdict(school, service, context=activity_context))
                 status = 200  # Unknown/insufficient is a valid, explicit policy outcome.
             elif path.endswith("/air") or path.endswith("/forecast"):
                 body = get_service().get(school, "current" if path.endswith("/air") else "forecast")
                 status = 503 if body["status"] == "unavailable" else 200
             else:
                 status, body = 200, school
-        except (ValueError, TypeError):
-            status, body = 400, {"error": {"code": "INVALID_REQUEST", "message": "Invalid request parameters or coordinates"}}
+        except (ValueError, TypeError) as error:
+            stale = str(error) == "STALE_VERDICT"
+            status, body = (409 if stale else 400), {"error": {"code": "STALE_VERDICT" if stale else "INVALID_REQUEST", "message": "Reload the current verdict" if stale else "Invalid request parameters or coordinates"}}
         except (RuntimeError, CacheError):
             status, body = 503, {"error": {"code": "ENVIRONMENT_UNAVAILABLE", "message": "School configuration or cache unavailable"}}
     else:

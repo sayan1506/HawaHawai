@@ -1,10 +1,11 @@
 name: hawahawai-dev
 services:
   backend:
-    image: hawahawai-backend:phase2-regulations-final
+    image: hawahawai-backend:phase3-final-compact
     container_name: hawahawai-backend-dev
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     pull_policy: never
     ports:
       - "127.0.0.1:18080:8000"
@@ -14,7 +15,7 @@ services:
       - ./contracts:/contracts:ro
     networks: [dev]
     cpus: 0.5
-    mem_limit: 128m
+    mem_limit: 256m
     pids_limit: 64
     read_only: true
     cap_drop: [ALL]

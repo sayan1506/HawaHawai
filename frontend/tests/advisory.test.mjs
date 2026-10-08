@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {validateAdvisory,verdictExpired} from '../src/advisoryValidity.ts';
+const fixture=()=>({school_id:'demo',explanation_method:'DETERMINISTIC',en:'Verify before proceeding',hi:'पुष्टि करें',decision:'DATA_INSUFFICIENT',verdict_id:'id',valid_until:'2026-10-08T10:00:00Z',actions:[],sources:[],caveats:[],regulatory_status:{verification_state:'UNKNOWN',active_stage:null},authoritative_decision:{decision:'DATA_INSUFFICIENT',decision_id:'id',valid_until:'2026-10-08T10:00:00Z',regulatory_status:{verification_state:'UNKNOWN'},actions:[]}});
+test('English/Hindi fallback with truthful unknown accepted',()=>assert.equal(validateAdvisory(fixture(),'demo').decision,'DATA_INSUFFICIENT'));
+test('Contradictory verdict rejected',()=>{const f=fixture();f.decision='GO_OUTDOORS';assert.throws(()=>validateAdvisory(f,'demo'));});
+test('Invented official stage rejected',()=>{const f=fixture();f.regulatory_status.active_stage=3;assert.throws(()=>validateAdvisory(f,'demo'));});
+test('Changed action rejected',()=>{const f=fixture();f.actions=[{recommendation:'NORMAL'}];assert.throws(()=>validateAdvisory(f,'demo'));});
+test('Expired advisory must be hidden',()=>assert.equal(verdictExpired(fixture().valid_until,Date.parse('2026-10-08T10:00:01Z')),true));
+test('Incomplete language rejected',()=>{const f=fixture();f.hi='';assert.throws(()=>validateAdvisory(f,'demo'));});

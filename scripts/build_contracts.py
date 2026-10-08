@@ -104,27 +104,41 @@ def main():
             "activity": enum("all", "assembly", "sports", "physical_education", "other", "indoor"), "window_start": TIME, "window_end": TIME})}
     schemas["Verdict"]["properties"].update(extension)
     schemas["Verdict"]["required"] += list(extension)
+    localized = json.loads(json.dumps(schemas["Action"]))
+    localized["properties"].update(en=STRING, hi=STRING)
+    localized["required"] += ["en", "hi"]
+    schemas["LocalizedAction"] = localized
+    advisory_extension = {"school_name": STRING, "decision": extension["decision"], "valid_until": TIME,
+        "languages": {"const": ["en", "hi"]}, "explanation_method": enum("AI", "DETERMINISTIC"),
+        "explanation_version": STRING, "generation_scope": {"const": "approved_statement_ordering"},
+        "statement_ids": ARRAY(STRING), "authoritative_decision": ref("Verdict"), "actions": ARRAY(ref("LocalizedAction")),
+        "evidence": ARRAY(ref("DecisionEvidence")), "sources": ARRAY({"anyOf": [ref("Source"), ref("PolicySource"), ref("RegulatoryDocument")]}),
+        "regulatory_status": ref("GrapStatus"), "data_quality": extension["data_quality"], "cache": obj({"status": enum("hit", "miss")})}
+    advisory_extension.update(observations=ARRAY(ref("DecisionEvidence")), modeled_conditions=ARRAY(ref("DecisionEvidence")),
+        forecast_summary=obj({"scope": STRING, "points": ARRAY(ref("DecisionEvidence")), "available": {"type": "boolean"}}))
+    schemas["Advisory"]["properties"].update(advisory_extension)
+    schemas["Advisory"]["required"] += list(advisory_extension)
     paths = {}
     for path, name in [("/health", "Health"), ("/v1/schools/{school_id}", "SchoolProfile"), ("/v1/schools/{school_id}/air", "AirReading"), ("/v1/schools/{school_id}/forecast", "Forecast"), ("/v1/grap", "GrapStatus"), ("/v1/schools/{school_id}/grap", "GrapStatus"), ("/v1/schools/{school_id}/verdict", "Verdict"), ("/v1/schools/{school_id}/advisory", "Advisory")]:
-        planned = name == "Advisory" or path == "/v1/grap"
+        planned = path == "/v1/grap"
         operation = {"operationId": f"get{name}", "x-implemented": not planned,
                      "description": "Planned contract only; not deployed." if planned else "Phase 0/1-compatible evidence or Phase 2 read-only deterministic policy.",
                      "responses": {"200": {"description": name, "content": {"application/json": {"schema": ref(name)}}}, "404": {"description": "Not found", "content": {"application/json": {"schema": ref("Error")}}}}}
         if "{school_id}" in path:
             operation["parameters"] = [{"name": "school_id", "in": "path", "required": True, "schema": school["properties"]["school_id"]}]
-            if name in {"GrapStatus", "Verdict"} and not planned:
+            if name in {"GrapStatus", "Verdict", "Advisory"} and not planned:
                 operation["parameters"] += [{"name": "grade", "in": "query", "schema": {"type": "integer", "minimum": 0, "maximum": 12}}, {"name": "activity", "in": "query", "schema": extension["activity_context"]["properties"]["activity"]}]
         paths[path] = {"get": operation}
         if not planned:
             operation["responses"]["400"] = {"description": "Invalid request", "content": {"application/json": {"schema": ref("Error")}}}
             operation["responses"]["503"] = {"description": "Unavailable evidence or cache", "content": {"application/json": {"schema": {"anyOf": [ref(name), ref("Error")]}}}}
     paths["/v1/schools/{school_id}/advisory"]["post"] = {
-        "operationId": "generateAdvisory", "x-implemented": False, "description": "Planned for Phase 3/4. Explains a persisted, current deterministic verdict.",
+        "operationId": "generateAdvisory", "x-implemented": True, "description": "Phase 3: bounded bilingual explanation; supplied verdict_id must match current trusted evaluation. Both languages are returned.",
         "parameters": paths["/v1/schools/{school_id}/advisory"]["get"]["parameters"],
         "requestBody": {"required": True, "content": {"application/json": {"schema": ref("AdvisoryRequest")}}},
-        "responses": {"200": {"description": "Bilingual advisory", "content": {"application/json": {"schema": ref("Advisory")}}}},
+        "responses": {"200": {"description": "Bilingual advisory", "content": {"application/json": {"schema": ref("Advisory")}}}, **{str(code): {"description": "Invalid, stale, unknown or unavailable request", "content": {"application/json": {"schema": ref("Error")}}} for code in (400,404,409,503)}},
     }
-    document = {"openapi": "3.1.0", "info": {"title": "HawaHawai API contracts", "version": "0.2.0", "description": "Phase 2: read-only regulatory registry and deterministic school policy. Unknown official status is explicit. No AI advisory or stage inference."}, "paths": paths, "components": {"schemas": schemas}}
+    document = {"openapi": "3.1.0", "info": {"title": "HawaHawai API contracts", "version": "0.3.0", "description": "Phase 3: constrained Strands bilingual explanations. Phase 2 owns all authoritative safety fields. No public regulatory updates."}, "paths": paths, "components": {"schemas": schemas}}
     target = ROOT / "contracts/openapi.json"
     target.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
     print(f"Generated {target.relative_to(ROOT)}")

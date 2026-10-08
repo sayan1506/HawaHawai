@@ -1,0 +1,6 @@
+# Linux ARM64 wheels are prepared separately; never package the Windows virtualenv.
+-c requirements-runtime.lock.txt
+strands-agents[gemini,openai]==1.58.1
+google-genai==2.29.0
+openai==2.54.0
+pydantic==2.13.5

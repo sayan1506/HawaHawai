@@ -25,13 +25,31 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def do_POST(self):
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if not 0 < length <= 1024: raise ValueError()
+            payload = self.rfile.read(length).decode()
+        except (ValueError, UnicodeError):
+            self.send_error(400)
+            return
+        response = handler({"rawPath": urlsplit(self.path).path, "body": payload,
+            "queryStringParameters": dict(parse_qsl(urlsplit(self.path).query)), "httpMethod": "POST"}, None)
+        self.send_response(response["statusCode"])
+        self.cors()
+        for key, value in response["headers"].items(): self.send_header(key, value)
+        body = response["body"].encode()
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_OPTIONS(self):
         if self.headers.get("Origin") not in ALLOWED_ORIGINS:
             self.send_error(403)
             return
         self.send_response(204)
         self.cors()
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "content-type")
         self.end_headers()
 

@@ -1,3 +1,4 @@
+import {validateAdvisory} from './advisoryValidity';
 export interface HealthResponse {
   status: 'ok'; service: 'hawahawai-backend'; environment: string;
   version: string; timestamp: string; phase: 0;
@@ -29,6 +30,20 @@ export interface VerdictResponse {
   actions: {activity: string; recommendation: string; instruction: string; mandatory: boolean; applicable_grades: number[]}[];
   evidence: {evidence_id: string; value: number; scale: 'US_AQI'; source_type: string; source_id: string; timestamp: string; freshness: string}[];
   policy_sources: {evidence_id: string; title: string; url: string; scope: string}[]; warnings: string[];
+}
+
+export interface AdvisoryResponse {
+  school_id:string; decision:VerdictResponse['decision']; en:string; hi:string;
+  generated_at:string; valid_until:string; explanation_method:'AI'|'DETERMINISTIC'; generator:string;
+  authoritative_decision:VerdictResponse; regulatory_status:GrapResponse; caveats:string[];
+  sources:{url:string; name?:string; title?:string}[]; cache:{status:string};
+  actions:(VerdictResponse['actions'][number] & {en:string;hi:string})[];
+}
+export async function getAdvisory(schoolId:string,signal?:AbortSignal):Promise<AdvisoryResponse> {
+  const base=(import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:18080').replace(/\/$/,'');
+  const response=await fetch(`${base}/v1/schools/${encodeURIComponent(schoolId)}/advisory`,{signal,cache:'no-store'});
+  if(!response.ok)throw new Error(`Advisory API returned HTTP ${response.status}`);
+  return validateAdvisory(await response.json(),schoolId) as AdvisoryResponse;
 }
 
 export async function getSafety(schoolId: string, kind: 'grap' | 'verdict', signal?: AbortSignal): Promise<GrapResponse | VerdictResponse> {

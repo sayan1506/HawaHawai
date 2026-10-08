@@ -4,6 +4,7 @@ import { getHealth, type HealthResponse } from './api';
 import './styles.css';
 import {EnvironmentalView} from './EnvironmentalView';
 import {SafetyView} from './SafetyView';
+import {AdvisoryView} from './AdvisoryView';
 
 function App() {
   const [health, setHealth] = useState<HealthResponse>();
@@ -20,7 +21,7 @@ function App() {
     return () => { active = false; controller.abort(); window.clearTimeout(timeout); };
   }, [attempt]);
   return <main>
-    <header><span className="brand">HawaHawai</span><span className="badge">Deterministic school policy · Phase 2</span></header>
+    <header><span className="brand">HawaHawai</span><span className="badge">Grounded bilingual explanations · Phase 3</span></header>
     <section className="intro"><p className="eyebrow">FOR SCHOOLS IN DELHI-NCR</p>
       <h1>A clearer school day.<br/>A safer breath.</h1>
       <p>Air-quality evidence, practical school actions, and parent advisories — coming together in HawaHawai.</p>
@@ -30,6 +31,7 @@ function App() {
       {error && <button onClick={() => setAttempt(value => value + 1)}>Try again</button>}
     </section>
     <SafetyView/>
+    <AdvisoryView/>
     <EnvironmentalView/>
     <footer>This advisor will assist school decisions. Always follow current official notices.</footer>
   </main>;

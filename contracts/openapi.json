@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "HawaHawai API contracts",
-    "version": "0.2.0",
-    "description": "Phase 2: read-only regulatory registry and deterministic school policy. Unknown official status is explicit. No AI advisory or stage inference."
+    "version": "0.3.0",
+    "description": "Phase 3: constrained Strands bilingual explanations. Phase 2 owns all authoritative safety fields. No public regulatory updates."
   },
   "paths": {
     "/health": {
@@ -477,8 +477,8 @@
     "/v1/schools/{school_id}/advisory": {
       "get": {
         "operationId": "getAdvisory",
-        "x-implemented": false,
-        "description": "Planned contract only; not deployed.",
+        "x-implemented": true,
+        "description": "Phase 0/1-compatible evidence or Phase 2 read-only deterministic policy.",
         "responses": {
           "200": {
             "description": "Advisory",
@@ -499,6 +499,33 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable evidence or cache",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/Advisory"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         "parameters": [
@@ -510,13 +537,37 @@
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"
             }
+          },
+          {
+            "name": "grade",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "activity",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "assembly",
+                "sports",
+                "physical_education",
+                "other",
+                "indoor"
+              ]
+            }
           }
         ]
       },
       "post": {
         "operationId": "generateAdvisory",
-        "x-implemented": false,
-        "description": "Planned for Phase 3/4. Explains a persisted, current deterministic verdict.",
+        "x-implemented": true,
+        "description": "Phase 3: bounded bilingual explanation; supplied verdict_id must match current trusted evaluation. Both languages are returned.",
         "parameters": [
           {
             "name": "school_id",
@@ -525,6 +576,30 @@
             "schema": {
               "type": "string",
               "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"
+            }
+          },
+          {
+            "name": "grade",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            }
+          },
+          {
+            "name": "activity",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "assembly",
+                "sports",
+                "physical_education",
+                "other",
+                "indoor"
+              ]
             }
           }
         ],
@@ -545,6 +620,46 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Advisory"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid, stale, unknown or unavailable request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid, stale, unknown or unavailable request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Invalid, stale, unknown or unavailable request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Invalid, stale, unknown or unavailable request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -1902,6 +2017,164 @@
             "items": {
               "type": "string"
             }
+          },
+          "school_name": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "GO_OUTDOORS",
+              "MODIFIED_OUTDOORS",
+              "INDOOR_ONLY",
+              "DATA_INSUFFICIENT"
+            ]
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "languages": {
+            "const": [
+              "en",
+              "hi"
+            ]
+          },
+          "explanation_method": {
+            "type": "string",
+            "enum": [
+              "AI",
+              "DETERMINISTIC"
+            ]
+          },
+          "explanation_version": {
+            "type": "string"
+          },
+          "generation_scope": {
+            "const": "approved_statement_ordering"
+          },
+          "statement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "authoritative_decision": {
+            "$ref": "#/components/schemas/Verdict"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocalizedAction"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionEvidence"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Source"
+                },
+                {
+                  "$ref": "#/components/schemas/PolicySource"
+                },
+                {
+                  "$ref": "#/components/schemas/RegulatoryDocument"
+                }
+              ]
+            }
+          },
+          "regulatory_status": {
+            "$ref": "#/components/schemas/GrapStatus"
+          },
+          "data_quality": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "official_observations_available": {
+                "type": "boolean"
+              },
+              "station_observations_available": {
+                "type": "boolean"
+              },
+              "modeled_data_available": {
+                "type": "boolean"
+              },
+              "forecast_available": {
+                "type": "boolean"
+              },
+              "current_freshness": {
+                "type": "string"
+              },
+              "forecast_freshness": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "official_observations_available",
+              "station_observations_available",
+              "modeled_data_available",
+              "forecast_available",
+              "current_freshness",
+              "forecast_freshness"
+            ]
+          },
+          "cache": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "hit",
+                  "miss"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionEvidence"
+            }
+          },
+          "modeled_conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionEvidence"
+            }
+          },
+          "forecast_summary": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "scope": {
+                "type": "string"
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DecisionEvidence"
+                }
+              },
+              "available": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "scope",
+              "points",
+              "available"
+            ]
           }
         },
         "required": [
@@ -1913,7 +2186,25 @@
           "hi",
           "generator",
           "evidence_ids",
-          "caveats"
+          "caveats",
+          "school_name",
+          "decision",
+          "valid_until",
+          "languages",
+          "explanation_method",
+          "explanation_version",
+          "generation_scope",
+          "statement_ids",
+          "authoritative_decision",
+          "actions",
+          "evidence",
+          "sources",
+          "regulatory_status",
+          "data_quality",
+          "cache",
+          "observations",
+          "modeled_conditions",
+          "forecast_summary"
         ]
       },
       "ObservationProvider": {
@@ -2299,6 +2590,88 @@
           "authority",
           "published_on",
           "scope"
+        ]
+      },
+      "LocalizedAction": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "activity": {
+            "type": "string",
+            "enum": [
+              "assembly",
+              "sports",
+              "physical_education",
+              "other",
+              "indoor",
+              "administration",
+              "parent_communication"
+            ]
+          },
+          "instruction": {
+            "type": "string"
+          },
+          "rule_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendation": {
+            "type": "string",
+            "enum": [
+              "VERIFY_BEFORE_PROCEEDING",
+              "NORMAL_WITH_CAVEATS",
+              "MODIFY",
+              "INDOOR_ALTERNATIVE",
+              "ASSESS_INDOOR_ALTERNATIVE",
+              "VERIFY_STATUS",
+              "REVIEW_ORDERS",
+              "HYBRID_CLASSES",
+              "SUSPEND_OUTDOOR",
+              "SUSPEND_PHYSICAL_CLASSES",
+              "REVIEW_ORDER",
+              "RESCHEDULE_SPORTS",
+              "AVOID_OUTDOOR_ADVISORY",
+              "STRUCTURED_REASONS_READY",
+              "REVIEW_SCHOOL_OPERATIONS",
+              "FOLLOW_PHYSICAL_CLASS_ORDER"
+            ]
+          },
+          "mandatory": {
+            "type": "boolean"
+          },
+          "applicable_grades": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12
+            }
+          },
+          "en": {
+            "type": "string"
+          },
+          "hi": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "activity",
+          "instruction",
+          "rule_ids",
+          "evidence_ids",
+          "recommendation",
+          "mandatory",
+          "applicable_grades",
+          "en",
+          "hi"
         ]
       }
     }

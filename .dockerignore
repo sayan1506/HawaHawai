@@ -1,0 +1,17 @@
+**
+!backend/
+!backend/app.py
+!backend/local_server.py
+!backend/requirements-runtime.txt
+!backend/requirements-runtime.lock.txt
+!backend/environmental/
+!backend/environmental/**
+!backend/safety/
+!backend/safety/**
+!backend/advisory/
+!backend/advisory/**
+!agent/
+!agent/**
+**/__pycache__/
+**/*.pyc
+**/.env*

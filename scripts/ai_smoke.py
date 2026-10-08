@@ -1,4 +1,5 @@
-"""One harmless backend-only Strands call. Prints no keys or provider error bodies."""
+"""One bounded backend Strands plan using actual deployed trusted school evidence."""
+import asyncio
 import os
 import logging
 import sys
@@ -7,28 +8,29 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from dotenv import load_dotenv
-from agent.providers import ProviderNotConfigured, create_model
+from scripts.advisory_smoke import BASE, get
 
 
 def main():
     load_dotenv(ROOT / "backend" / ".env", override=False)
     provider = os.environ.get("HAWAHAWAI_AI_PROVIDER", "gemini")
-    try:
-        model = create_model(provider)
-    except ProviderNotConfigured as error:
-        print(f"BLOCKED: {error}. Add the value in backend/.env and rerun.")
+    variable = {"gemini": "GEMINI_API_KEY", "groq": "GROQ_API_KEY"}.get(provider)
+    if not variable or not os.environ.get(variable, "").strip():
+        print("BLOCKED: supported provider/key not configured in backend/.env")
         return 2
     try:
-        from strands import Agent
+        import json
+        from agent.runtime import invoke_strands
+        from agent.explanations import validate_plan
+        school = json.loads((ROOT / "contracts/demo-school.json").read_text())
+        prefix = BASE + "/v1/schools/" + school["school_id"]
+        snapshot = {"school": school, "current": get(prefix + "/air"),
+                    "forecast": get(prefix + "/forecast"), "decision": get(prefix + "/verdict")}
         previous_log_level = logging.root.manager.disable
         logging.disable(logging.CRITICAL)
-        agent = Agent(model=model, tools=[], callback_handler=None,
-                      system_prompt="You are a connectivity test. Answer exactly HAWAHAWAI_OK. Do not give advice.")
-        result = str(agent("Reply HAWAHAWAI_OK only."))
-        if "HAWAHAWAI_OK" not in result:
-            print("FAIL: provider returned an unexpected response")
-            return 1
-        print(f"PASS: Strands {provider} backend connectivity verified")
+        plan = asyncio.run(invoke_strands(provider, os.environ, snapshot, 8 if provider == "gemini" else 4))
+        validate_plan(plan.model_dump_json(), snapshot["decision"])
+        print(f"PASS: Strands {provider} backend connectivity and four trusted tools verified")
         return 0
     except Exception as error:
         print(f"FAIL: {provider} connectivity ({type(error).__name__}); error text suppressed to protect credentials")
