@@ -1,0 +1,145 @@
+{
+  "school_id": "delhi-demo-school",
+  "latitude": 28.6139,
+  "longitude": 77.209,
+  "sources": [
+    {
+      "source_id": "open-meteo-cams-global",
+      "name": "Open-Meteo / Copernicus CAMS Global",
+      "url": "https://open-meteo.com/en/docs/air-quality-api",
+      "kind": "model_forecast",
+      "observed_at": null,
+      "retrieved_at": "2026-10-08T08:00:00+00:00",
+      "valid_until": null,
+      "freshness": "fresh",
+      "location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      },
+      "limitations": [
+        "Modeled grid values, not physical station measurements.",
+        "Approximately 45 km global grid; native 3-hour values interpolated hourly; local school exposure may differ.",
+        "CAMS global forecast updates approximately every 12 hours. API retrieval time is not model initialization time.",
+        "Attribution: Open-Meteo and Copernicus CAMS (https://ads.atmosphere.copernicus.eu/datasets/cams-global-atmospheric-composition-forecasts)."
+      ]
+    }
+  ],
+  "warnings": [
+    "CAMS_GLOBAL_APPROX_45_KM_GRID",
+    "MISSING_CARBON_MONOXIDE",
+    "MISSING_NITROGEN_DIOXIDE",
+    "MISSING_OZONE",
+    "MISSING_SULPHUR_DIOXIDE",
+    "MODELED_NOT_STATION_OBSERVATIONS",
+    "MODEL_RUN_TIMESTAMP_NOT_PROVIDED",
+    "US_AQI_NOT_INDIAN_AQI",
+    "OFFICIAL_OBSERVATIONS_UNAVAILABLE: authenticated access and pollutant semantics not verified; no official Indian AQI available.",
+    "OPENAQ_NOT_INTEGRATED: API key and Delhi-NCR station coverage not verified."
+  ],
+  "retrieved_at": "2026-10-08T08:00:00+00:00",
+  "freshness_status": "fresh",
+  "data_quality": "modeled_grid_estimate",
+  "cache": {
+    "status": "refreshed",
+    "fresh_until": "2026-10-08T08:15:00+00:00"
+  },
+  "status": "available",
+  "observations": [],
+  "observation_providers": [
+    {
+      "observations": [],
+      "status": "unavailable",
+      "source_name": "CPCB / data.gov.in",
+      "source_type": "measurement",
+      "source_url": "https://www.data.gov.in/catalog/real-time-air-quality-index",
+      "retrieved_at": "2026-10-08T08:00:00+00:00",
+      "warnings": [
+        "OFFICIAL_OBSERVATIONS_UNAVAILABLE: authenticated access and pollutant semantics not verified; no official Indian AQI available."
+      ]
+    },
+    {
+      "observations": [],
+      "status": "unavailable",
+      "source_name": "OpenAQ",
+      "source_type": "measurement",
+      "source_url": "https://docs.openaq.org/",
+      "retrieved_at": "2026-10-08T08:00:00+00:00",
+      "warnings": [
+        "OPENAQ_NOT_INTEGRATED: API key and Delhi-NCR station coverage not verified."
+      ]
+    }
+  ],
+  "modeled_current": {
+    "valid_at": "2026-10-08T07:55:00+00:00",
+    "aqi": [
+      {
+        "source_id": "open-meteo-cams-global",
+        "observed_at": null,
+        "forecast_for": "2026-10-08T07:55:00+00:00",
+        "source_type": "model_forecast",
+        "value": 174,
+        "scale": "US_AQI"
+      }
+    ],
+    "pollutants": [
+      {
+        "source_id": "open-meteo-cams-global",
+        "observed_at": null,
+        "forecast_for": "2026-10-08T07:55:00+00:00",
+        "source_type": "model_forecast",
+        "name": "pm2_5",
+        "value": 45,
+        "unit": "ug/m3",
+        "original_unit": "μg/m³",
+        "averaging_period": "model instantaneous concentration"
+      },
+      {
+        "source_id": "open-meteo-cams-global",
+        "observed_at": null,
+        "forecast_for": "2026-10-08T07:55:00+00:00",
+        "source_type": "model_forecast",
+        "name": "pm10",
+        "value": 80,
+        "unit": "ug/m3",
+        "original_unit": "μg/m³",
+        "averaging_period": "model instantaneous concentration"
+      }
+    ]
+  },
+  "aqi": [
+    {
+      "source_id": "open-meteo-cams-global",
+      "observed_at": null,
+      "forecast_for": "2026-10-08T07:55:00+00:00",
+      "source_type": "model_forecast",
+      "value": 174,
+      "scale": "US_AQI"
+    }
+  ],
+  "pollutants": [
+    {
+      "source_id": "open-meteo-cams-global",
+      "observed_at": null,
+      "forecast_for": "2026-10-08T07:55:00+00:00",
+      "source_type": "model_forecast",
+      "name": "pm2_5",
+      "value": 45,
+      "unit": "ug/m3",
+      "original_unit": "μg/m³",
+      "averaging_period": "model instantaneous concentration"
+    },
+    {
+      "source_id": "open-meteo-cams-global",
+      "observed_at": null,
+      "forecast_for": "2026-10-08T07:55:00+00:00",
+      "source_type": "model_forecast",
+      "name": "pm10",
+      "value": 80,
+      "unit": "ug/m3",
+      "original_unit": "μg/m³",
+      "averaging_period": "model instantaneous concentration"
+    }
+  ]
+}

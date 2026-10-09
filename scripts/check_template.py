@@ -17,6 +17,7 @@ allowed = {"AWS::Logs::LogGroup", "AWS::IAM::Role", "AWS::IAM::Policy", "AWS::La
 allowed.add("AWS::SecretsManager::Secret")
 allowed |= {'AWS::Scheduler::ScheduleGroup', 'AWS::Scheduler::Schedule'}
 allowed.add('AWS::Lambda::EventInvokeConfig')
+allowed |= {'AWS::Amplify::App', 'AWS::Amplify::Branch'}
 for logical_id, resource in template["Resources"].items():
     assert resource["Type"] in allowed, logical_id
     props = resource["Properties"]
@@ -67,5 +68,19 @@ async_config = [r['Properties'] for r in template['Resources'].values() if r['Ty
 assert len(async_config)==1 and async_config[0]['Qualifier']=='$LATEST'
 assert async_config[0]['MaximumRetryAttempts']==1 and async_config[0]['MaximumEventAgeInSeconds']==900
 assert template['Resources'][async_config[0]['FunctionName']['Ref']]['Type']=='AWS::Lambda::Function'
-assert len(template['Resources'])==33
-print("PASS: Phase 4 profile/verdict key isolation, one non-AI schedule, owned routes/secret and reproducible asset")
+app = template['Resources']['WebApp']
+assert app['Type']=='AWS::Amplify::App' and app['Properties']['Name']=='hawahawai-dev-web'
+assert app['Properties']['Platform']=='WEB'
+assert not set(app['Properties']) & {'Repository','AccessToken','OauthToken','IAMServiceRole','ComputeRoleArn'}
+branch = template['Resources']['WebProduction']['Properties']
+assert branch['AppId']=={'Fn::GetAtt':['WebApp','AppId']} and branch['BranchName']=='production'
+assert branch['EnableAutoBuild'] is False and branch['EnablePullRequestPreview'] is False
+api = next(r['Properties'] for r in template['Resources'].values() if r['Type']=='AWS::ApiGatewayV2::Api')
+origins = api['CorsConfiguration']['AllowOrigins']
+assert len(origins)==5 and '*' not in origins
+assert origins[-1]=={'Fn::Join':['',['https://production.',{'Fn::GetAtt':['WebApp','DefaultDomain']}]]}
+assert set(api['CorsConfiguration']['AllowMethods'])=={'GET','POST'}
+assert sum(r['Type']=='AWS::Amplify::App' for r in template['Resources'].values())==1
+assert sum(r['Type']=='AWS::Amplify::Branch' for r in template['Resources'].values())==1
+assert len(template['Resources'])==35
+print("PASS: preserved Phase 4 resources/security, one static Amplify app/branch and exact-origin CORS")

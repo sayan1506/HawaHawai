@@ -2,7 +2,9 @@
 
 AI-powered School Air-Safety Advisor for the AWS Environmental Hacks hackathon. Pilot: one configurable Delhi-NCR school. Roadmap: [.response/HawaHawai_Project_Phases.md](.response/HawaHawai_Project_Phases.md).
 
-Phases 0-3 remain operational. Phase 4 adds validated persistent school configuration, immutable decision history, current-record freshness checks and one non-AI daily planning schedule. See the [Phase 4 checkpoint](.response/Phase_4_Checkpoint.md) and [architecture](.response/Phase_4_Architecture.md). Official station observations remain unavailable and current GRAP activation is **UNKNOWN**: documentary research is not a recorded human verification. Modeled US AQI never establishes an official stage. The `school-safety-v1` engine remains the only safety authority. Phase 5 is not started.
+Phases 0-4 remain operational. Phase 5 adds the responsive decision-first PWA, read-only persisted school information, guarded bilingual explanations and static Amplify hosting. See the [Phase 5 checkpoint](.response/Phase_5_Checkpoint.md) and [architecture](.response/Phase_5_Architecture.md). Official station observations remain unavailable and current GRAP activation is **UNKNOWN**: documentary research is not a recorded human verification. Modeled US AQI never establishes an official stage. The `school-safety-v1` engine remains the only safety authority. Phase 6 requires separate authorization.
+
+Live PWA: https://production.d3vzi8hqeh0wba.amplifyapp.com
 
 Local frontend: http://127.0.0.1:5173/
 
@@ -47,6 +49,22 @@ The Dockerfile reuses a verified existing Python image by digest without retaggi
 Compose updates only `hawahawai-backend-dev` on `hawahawai-dev-network`. Image tags are versioned without overwriting existing images. The school contracts directory is bind-mounted read-only; there are no new Docker volumes or persistent databases. Host port 18080 avoids the existing service on 8000. Never stop/restart/delete unrelated Docker resources. The native Python adapter listens on 8000; on this machine use the Docker mapping to avoid the occupied port.
 
 `frontend/.env.local` selects the public deployed backend. To use local Docker, set `VITE_API_BASE_URL=http://127.0.0.1:18080`. API keys belong only in ignored `backend/.env`; never use a `VITE_` secret variable. Lambda loads keys from its single CDK-owned Secrets Manager secret, not environment values or code assets. Docker intentionally has no keys and verifies deterministic fallback. Open-Meteo needs no key for this non-commercial prototype. CPCB/data.gov.in and OpenAQ remain unavailable; keys alone do not enable unverified integrations.
+
+Production requires a public HTTPS API origin at build time. Local frontend environment files contain only this URL. On a clean checkout, supply it explicitly:
+
+```powershell
+$env:VITE_API_BASE_URL = 'https://pu8l3a213j.execute-api.us-east-1.amazonaws.com'
+npm run check
+npm run build
+.venv\Scripts\python.exe scripts/generate_frontend_contracts.py --check
+node --import tsx --test frontend/tests/*.test.mjs
+npx --no-install playwright test --config frontend/playwright.config.ts phase5.spec.ts
+# Real public deployment verification, without mocked AWS responses:
+npx --no-install playwright test --config frontend/playwright.config.ts production.spec.ts
+.venv\Scripts\python.exe scripts/phase5_smoke.py
+```
+
+Browser tests use installed Chrome in an isolated test profile. PWA caches static assets only; safety APIs are NetworkOnly. Offline reload shows the app shell and withholds current recommendations/actions. The existing advisory button requests a constrained explanation; the school profile is read-only and historical records are never actionable.
 
 ## Verification
 
@@ -97,6 +115,17 @@ The project owner monitors AWS credit balance, expiry, and spending. No budget o
 For every deployment, reuse existing HawaHawai resources through updates to the same CDK-managed stack where practical. Review `cdk diff` for replacements and retained resources before deploying. After deployment, verify that superseded HawaHawai resources have not been left orphaned and generating avoidable charges. Any cleanup must target only confirmed obsolete HawaHawai resources. If a replacement would leave retained billable resources, or cleanup would affect persistent data or protected Docker images, flag it before deploying and obtain the necessary direction. Never use global cleanup commands, delete existing images, or remove persistent data to reduce costs.
 
 Standard CDK deployment publishes its HawaHawai stack template to the existing bootstrap bucket and uses existing deployment roles. It does not update/redeploy `CDKToolkit`. Never bootstrap, destroy, modify ChugLi, deploy unrelated stacks, or perform Git staging/commits/pushes/remote writes.
+
+Phase 5 adds one CDK-owned static Amplify app and manual `production` branch to this same stack, with its exact HTTPS origin added to the existing API CORS allowlist. No repository token, automatic build, SSR compute or custom domain is required. After building and reviewing the named CDK diff, preview the owned artifact, then upload it when deployment is authorized:
+
+```powershell
+.venv\Scripts\python.exe scripts/deploy_frontend.py
+.venv\Scripts\python.exe scripts/deploy_frontend.py --deploy
+.venv\Scripts\python.exe scripts/phase5_smoke.py
+npm run cdk -- diff HawaHawaiDev --profile hawahawai --no-change-set
+```
+
+The artifact uploader validates exact stack/app/branch ownership and never logs its private presigned upload URL. Amplify hosting has normal usage charges. Current verification: 212 backend tests, 51 frontend tests, 20 isolated browser scenarios and one live production browser test pass. Whole-workspace audit still reports the existing high-severity transitive CDK tooling finding; frontend runtime dependency audit has zero findings.
 
 `python scripts/isolation_snapshot.py before --phase phase4` captures a non-overwritable phase-specific baseline. `python scripts/isolation_snapshot.py after --phase phase4` compares protected Docker definitions and all existing images, unrelated stack templates/events/resources, ChugLi Lambda configurations, and Git HEAD/reflog/index. Do not overwrite previous baselines. HawaHawai-owned containers/networks can be updated; existing image tags/digests cannot. This checks observable definitions, not unrelated application data.
 

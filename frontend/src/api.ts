@@ -1,91 +1,104 @@
 import {validateAdvisory} from './advisoryValidity';
-export interface HealthResponse {
-  status: 'ok'; service: 'hawahawai-backend'; environment: string;
-  version: string; timestamp: string; phase: 0;
-}
+import {apiBaseUrl} from './config';
+import type {Health, SchoolProfile, AirReading, Forecast, ForecastPoint, GrapStatus, Verdict, Advisory, VerdictHistory} from './contracts';
+export type {SchoolProfile};
+export type HealthResponse = Health;
+export type Evidence = AirReading | Forecast;
+export type Point = ForecastPoint;
+export type GrapResponse = GrapStatus;
+export type VerdictResponse = Verdict;
+export type AdvisoryResponse = Advisory;
 
-export interface Pollutant {name: string; value: number; unit: string; original_unit: string; source_id: string; source_type: 'model_forecast'; observed_at: null; forecast_for: string}
-export interface Aqi {value: number; scale: 'US_AQI'; source_id: string; forecast_for: string}
-export interface Point {valid_at: string; pollutants: Pollutant[]; aqi: Aqi[]}
-export interface Evidence {
-  school_id: string; status: 'available' | 'stale' | 'unavailable'; freshness_status: string;
-  retrieved_at: string | null; warnings: string[]; sources: {name: string; url: string; kind: string; retrieved_at: string}[];
-  modeled_current?: Point | null; observations?: Point[];
-  observation_providers?: {source_name: string; status: string; source_url: string; retrieved_at: string}[];
-  points?: Point[]; forecast_start?: string | null; forecast_end?: string | null;
-  cache: {status: string; fresh_until: string | null};
+export class ApiError extends Error {
+  constructor(public status: number, public kind: 'network' | 'http' | 'schema' | 'configuration') {super(kind);}
 }
-
-export interface GrapResponse {
-  verification_state: 'VERIFIED_ACTIVE' | 'VERIFIED_INACTIVE' | 'UNKNOWN' | 'STALE' | 'CONFLICTING';
-  active_stage: number | null; verified_at: string | null; verification_action_recorded: boolean;
-  schedule_version: string; snapshot_version: string; warnings: string[];
-  source_documents: {document_id: string; title: string; authority: string; url: string; published_on: string; verification_status: string}[];
+export function errorMessage(error: unknown): string {
+  if (!(error instanceof ApiError)) return 'Unable to load this section. Check your connection and try again.';
+  if (error.kind === 'configuration') return 'The public API connection is not configured.';
+  if (error.kind === 'schema') return 'The response could not be verified. Reload to check current data.';
+  if (error.status === 404) return 'No data is available for this school yet.';
+  if (error.status === 409) return 'The decision changed. Refresh the current decision before loading its explanation.';
+  if (error.status === 429) return 'The service is busy. Please wait before trying again.';
+  if (error.status >= 500) return 'The service or data provider is temporarily unavailable. Try again shortly.';
+  if (error.status >= 400) return 'This request could not be completed. Reload and try again.';
+  return 'Connection failed or timed out. Reconnect and try again.';
 }
-export interface VerdictResponse {
-  school_id: string; decision: 'GO_OUTDOORS' | 'MODIFIED_OUTDOORS' | 'INDOOR_ONLY' | 'DATA_INSUFFICIENT';
-  policy_version: string; evaluation_time: string; valid_until: string; requires_regulatory_verification: boolean;
-  regulatory_status: GrapResponse; data_quality: {official_observations_available: boolean; modeled_data_available: boolean; forecast_available: boolean};
-  rule_evaluations: {rule_id: string; message: string}[];
-  actions: {activity: string; recommendation: string; instruction: string; mandatory: boolean; applicable_grades: number[]}[];
-  evidence: {evidence_id: string; value: number; scale: 'US_AQI'; source_type: string; source_id: string; timestamp: string; freshness: string}[];
-  policy_sources: {evidence_id: string; title: string; url: string; scope: string}[]; warnings: string[];
+async function request(route: string, signal?: AbortSignal, body?: object): Promise<{body: any; status: number}> {
+  let base: string;
+  try {base = apiBaseUrl(import.meta.env?.VITE_API_BASE_URL, !!import.meta.env?.PROD);} catch {throw new ApiError(0, 'configuration');}
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  signal?.addEventListener('abort', cancel, {once: true});
+  if (signal?.aborted) controller.abort();
+  const timeout = setTimeout(cancel, 28000);
+  try {
+    const response = await fetch(base + route, {signal: controller.signal, cache: 'no-store', credentials: 'omit',
+      method: body ? 'POST' : 'GET', ...(body ? {headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)} : {})});
+    if (!response.ok && response.status !== 503) throw new ApiError(response.status, 'http');
+    return {body: await response.json(), status: response.status};
+  } catch (error) {if (error instanceof ApiError) throw error; throw new ApiError(0, 'network');}
+  finally {clearTimeout(timeout); signal?.removeEventListener('abort', cancel);}
 }
-
-export interface AdvisoryResponse {
-  school_id:string; decision:VerdictResponse['decision']; en:string; hi:string;
-  generated_at:string; valid_until:string; explanation_method:'AI'|'DETERMINISTIC'; generator:string;
-  authoritative_decision:VerdictResponse; regulatory_status:GrapResponse; caveats:string[];
-  sources:{url:string; name?:string; title?:string}[]; cache:{status:string};
-  actions:(VerdictResponse['actions'][number] & {en:string;hi:string})[];
+const path = (id: string, kind = '') => '/v1/schools/' + encodeURIComponent(id) + (kind ? '/' + kind : '');
+const fail = (): never => {throw new ApiError(0, 'schema');};
+const timestamp = (value: unknown) => typeof value === 'string' && Number.isFinite(Date.parse(value));
+function validateGrap(value: any) {
+  if (!value || !['VERIFIED_ACTIVE', 'VERIFIED_INACTIVE', 'UNKNOWN', 'STALE', 'CONFLICTING'].includes(value.verification_state)
+    || !Array.isArray(value.source_documents) || !Array.isArray(value.warnings)
+    || (['UNKNOWN', 'STALE', 'CONFLICTING'].includes(value.verification_state) && value.active_stage !== null)) fail();
 }
-export async function getAdvisory(schoolId:string,signal?:AbortSignal):Promise<AdvisoryResponse> {
-  const base=(import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:18080').replace(/\/$/,'');
-  const response=await fetch(`${base}/v1/schools/${encodeURIComponent(schoolId)}/advisory`,{signal,cache:'no-store'});
-  if(!response.ok)throw new Error(`Advisory API returned HTTP ${response.status}`);
-  return validateAdvisory(await response.json(),schoolId) as AdvisoryResponse;
+export function validateVerdict(value: any, schoolId: string): VerdictResponse {
+  validateGrap(value?.regulatory_status);
+  if (value.school_id !== schoolId || !['GO_OUTDOORS', 'MODIFIED_OUTDOORS', 'INDOOR_ONLY', 'DATA_INSUFFICIENT'].includes(value.decision)
+    || !['decided', 'DATA_INSUFFICIENT', 'VERIFY_STATUS'].includes(value.status) || value.persistence?.historical === true
+    || !Array.isArray(value.actions) || !Array.isArray(value.rule_evaluations) || !Array.isArray(value.reasons)
+    || !Array.isArray(value.evidence) || !Array.isArray(value.warnings) || !Array.isArray(value.sources) || !Array.isArray(value.policy_sources)
+    || !timestamp(value.evaluation_time) || !timestamp(value.valid_until) || !value.data_quality
+    || typeof value.decision_id !== 'string' || value.actions.some((a: any) => typeof a.instruction !== 'string'
+      || typeof a.recommendation !== 'string' || typeof a.mandatory !== 'boolean' || !Array.isArray(a.applicable_grades))
+    || (value.decision === 'GO_OUTDOORS' && (value.requires_regulatory_verification || !value.data_quality.station_observations_available))) fail();
+  return value;
 }
-
-export async function getSafety(schoolId: string, kind: 'grap' | 'verdict', signal?: AbortSignal): Promise<GrapResponse | VerdictResponse> {
-  const base = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:18080').replace(/\/$/, '');
-  const response = await fetch(`${base}/v1/schools/${encodeURIComponent(schoolId)}/${kind}`, {signal, cache: 'no-store'});
-  if (!response.ok) throw new Error(`School policy API returned HTTP ${response.status}`);
-  const body = await response.json();
-  const regulatory = kind === 'grap' ? body : body?.regulatory_status;
-  if (!regulatory || !['VERIFIED_ACTIVE', 'VERIFIED_INACTIVE', 'UNKNOWN', 'STALE', 'CONFLICTING'].includes(regulatory.verification_state)
-    || !Array.isArray(regulatory.source_documents) || !Array.isArray(regulatory.warnings)
-    || (['UNKNOWN', 'STALE', 'CONFLICTING'].includes(regulatory.verification_state) && regulatory.active_stage !== null)) throw new Error('Unexpected regulatory schema');
-  if (kind === 'verdict' && (body.school_id !== schoolId || !['GO_OUTDOORS', 'MODIFIED_OUTDOORS', 'INDOOR_ONLY', 'DATA_INSUFFICIENT'].includes(body.decision)
-    || !Array.isArray(body.actions) || !Array.isArray(body.rule_evaluations) || !Array.isArray(body.evidence)
-    || Number.isNaN(Date.parse(body.evaluation_time)) || Number.isNaN(Date.parse(body.valid_until))
-    || (body.decision === 'GO_OUTDOORS' && (body.requires_regulatory_verification || !body.data_quality?.station_observations_available)))) throw new Error('Unexpected decision schema');
-  return body;
+export async function getSchool(id: string, signal?: AbortSignal): Promise<SchoolProfile> {
+  const result = await request(path(id), signal); if (result.status !== 200) throw new ApiError(result.status, 'http');
+  const v = result.body;
+  if (v?.school_id !== id || typeof v.name !== 'string' || !v.name.trim() || typeof v.city !== 'string' || v.timezone !== 'Asia/Kolkata'
+    || !Number.isFinite(v.latitude) || !Number.isFinite(v.longitude) || !Array.isArray(v.languages) || !v.languages.length
+    || v.languages.some((l: string) => !['en', 'hi'].includes(l)) || typeof v.is_demo !== 'boolean') fail();
+  return v;
 }
-
-export async function getEvidence(schoolId: string, kind: 'air' | 'forecast', signal?: AbortSignal): Promise<Evidence> {
-  const base = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:18080').replace(/\/$/, '');
-  const response = await fetch(`${base}/v1/schools/${encodeURIComponent(schoolId)}/${kind}`, {signal, cache: 'no-store'});
-  const body = await response.json();
-  if ((!response.ok && response.status !== 503) || !body || body.school_id !== schoolId || !['available', 'stale', 'unavailable'].includes(body.status)
-    || !Array.isArray(body.sources) || !Array.isArray(body.warnings) || !body.cache) throw new Error(`Environmental API returned HTTP ${response.status}`);
-  const points = kind === 'forecast' ? body.points : body.modeled_current ? [body.modeled_current] : [];
-  if (!Array.isArray(points) || points.some((p: Point) => !p || Number.isNaN(Date.parse(p.valid_at)) || !Array.isArray(p.pollutants) || !Array.isArray(p.aqi)
-    || p.pollutants.some(v => !Number.isFinite(v.value) || v.value < 0 || v.unit !== 'ug/m3' || v.source_type !== 'model_forecast' || v.observed_at !== null || v.forecast_for !== p.valid_at)
-    || p.aqi.some(v => !Number.isFinite(v.value) || v.scale !== 'US_AQI' || v.forecast_for !== p.valid_at))) throw new Error('Unexpected environmental schema');
-  return body as Evidence;
+export function getSafety(id: string, kind: 'verdict', signal?: AbortSignal): Promise<VerdictResponse>;
+export function getSafety(id: string, kind: 'grap', signal?: AbortSignal): Promise<GrapResponse>;
+export async function getSafety(id: string, kind: 'verdict' | 'grap', signal?: AbortSignal) {
+  const result = await request(path(id, kind), signal); if (result.status !== 200) throw new ApiError(result.status, 'http');
+  if (kind === 'verdict') return validateVerdict(result.body, id);
+  validateGrap(result.body); return result.body as GrapResponse;
 }
-
+export async function getEvidence(id: string, kind: 'air' | 'forecast', signal?: AbortSignal): Promise<Evidence> {
+  const {body: v, status} = await request(path(id, kind), signal);
+  if (v?.school_id !== id || !['available', 'stale', 'unavailable'].includes(v.status) || !Array.isArray(v.sources)
+    || !Array.isArray(v.warnings) || !v.cache) {if (status !== 200) throw new ApiError(status, 'http'); fail();}
+  const points = kind === 'forecast' ? v.points : v.modeled_current ? [v.modeled_current] : [];
+  if (!Array.isArray(points) || points.some((p: Point) => !timestamp(p?.valid_at) || !Array.isArray(p.pollutants) || !Array.isArray(p.aqi)
+    || p.pollutants.some(x => !Number.isFinite(x.value) || x.value < 0 || x.unit !== 'ug/m3' || x.source_type !== 'model_forecast' || x.observed_at !== null || x.forecast_for !== p.valid_at)
+    || p.aqi.some(x => !Number.isFinite(x.value) || x.value < 0 || x.scale !== 'US_AQI' || x.source_type !== 'model_forecast' || x.observed_at !== null || x.forecast_for !== p.valid_at))) fail();
+  return v;
+}
+export async function getAdvisory(id: string, signal?: AbortSignal, verdictId?: string): Promise<AdvisoryResponse> {
+  const result = await request(path(id, 'advisory'), signal, verdictId ? {verdict_id: verdictId, languages: ['en', 'hi']} : undefined);
+  if (result.status !== 200) throw new ApiError(result.status, 'http');
+  try {validateVerdict(result.body?.authoritative_decision, id); return validateAdvisory(result.body, id);} catch {return fail();}
+}
 export async function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
-  const base = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:18080').replace(/\/$/, '');
-  const response = await fetch(`${base}/health`, {signal, cache: 'no-store'});
-  if (!response.ok) throw new Error(`Health API returned HTTP ${response.status}`);
-  const body: unknown = await response.json();
-  if (!body || typeof body !== 'object' || !('status' in body) || body.status !== 'ok'
-    || !('service' in body) || body.service !== 'hawahawai-backend'
-    || !('phase' in body) || body.phase !== 0
-    || !('environment' in body) || typeof body.environment !== 'string'
-    || !('version' in body) || typeof body.version !== 'string'
-    || !('timestamp' in body) || typeof body.timestamp !== 'string'
-    || Number.isNaN(Date.parse(body.timestamp))) throw new Error('Unexpected health response');
-  return body as HealthResponse;
+  const result = await request('/health', signal); if (result.status !== 200) throw new ApiError(result.status, 'http');
+  const v = result.body;
+  if (v?.status !== 'ok' || v.service !== 'hawahawai-backend' || v.phase !== 0 || !timestamp(v.timestamp)) fail();
+  return v;
+}
+export async function getHistory(id: string, signal?: AbortSignal): Promise<VerdictHistory> {
+  const result = await request(path(id, 'verdict/history'), signal); if (result.status !== 200) throw new ApiError(result.status, 'http');
+  const v = result.body;
+  if (v?.school_id !== id || v.status !== 'historical' || v.actionable !== false || typeof v.expired !== 'boolean'
+    || typeof v.matches_current_profile !== 'boolean' || !v.record?.decision) fail();
+  return v;
 }

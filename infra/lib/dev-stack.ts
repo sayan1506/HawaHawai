@@ -10,6 +10,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as scheduler from 'aws-cdk-lib/aws-scheduler';
+import * as amplify from 'aws-cdk-lib/aws-amplify';
 
 export class DevStack extends Stack {
   constructor(scope: Construct, id: string, props: StackProps) {
@@ -63,10 +64,31 @@ export class DevStack extends Stack {
       maximumRetryAttempts: 1, maximumEventAgeInSeconds: 900,
     });
     defaultPolicy.policyName = 'hawahawai-dev-health-logs';
+    // Static manual deployments keep Git untouched. No repository token, build
+    // role, SSR compute, additional bucket or custom domain is necessary.
+    const frontend = new amplify.CfnApp(this, 'WebApp', {
+      name: 'hawahawai-dev-web', platform: 'WEB',
+      description: 'HawaHawai Phase 5 static PWA; manual artifact deployment.',
+      enableBranchAutoDeletion: false,
+      customHeaders: JSON.stringify({customHeaders: [
+        {pattern: '**/*', headers: [
+          {key: 'X-Content-Type-Options', value: 'nosniff'},
+          {key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin'},
+          {key: 'X-Frame-Options', value: 'DENY'},
+          {key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://pu8l3a213j.execute-api.us-east-1.amazonaws.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"},
+          {key: 'Cache-Control', value: 'no-cache'},
+        ]},
+      ]}),
+    });
+    new amplify.CfnBranch(this, 'WebProduction', {
+      appId: frontend.attrAppId, branchName: 'production', stage: 'PRODUCTION',
+      enableAutoBuild: false, enablePullRequestPreview: false,
+    });
+    const frontendOrigin = `https://production.${frontend.attrDefaultDomain}`;
     const api = new apigw.HttpApi(this, 'Api', {
       apiName: 'hawahawai-dev-api', createDefaultStage: false,
       corsPreflight: {
-        allowOrigins: ['http://127.0.0.1:5173', 'http://localhost:5173', 'http://127.0.0.1:4173', 'http://localhost:4173'],
+        allowOrigins: ['http://127.0.0.1:5173', 'http://localhost:5173', 'http://127.0.0.1:4173', 'http://localhost:4173', frontendOrigin],
         allowMethods: [apigw.CorsHttpMethod.GET, apigw.CorsHttpMethod.POST], allowHeaders: ['content-type'],
         maxAge: Duration.minutes(5),
       },
@@ -82,6 +104,8 @@ export class DevStack extends Stack {
       throttle: {rateLimit: 5, burstLimit: 10},
     });
     new CfnOutput(this, 'ApiBaseUrl', {value: api.apiEndpoint});
+    new CfnOutput(this, 'FrontendUrl', {value: frontendOrigin});
+    new CfnOutput(this, 'FrontendAppId', {value: frontend.attrAppId});
     new CfnOutput(this, 'HealthUrl', {value: `${api.apiEndpoint}/health`});
     new CfnOutput(this, 'HealthFunctionName', {value: health.functionName});
     const planningGroup = new scheduler.CfnScheduleGroup(this, 'PlanningGroup', {name: scheduleGroupName});

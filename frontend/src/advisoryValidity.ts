@@ -9,7 +9,10 @@ export function validateAdvisory(value: any, schoolId: string) {
     || value.regulatory_status?.verification_state !== value.authoritative_decision.regulatory_status?.verification_state
     || (['UNKNOWN','STALE','CONFLICTING'].includes(value.regulatory_status.verification_state) && value.regulatory_status.active_stage !== null)
     || value.actions.length !== value.authoritative_decision.actions.length
-    || value.actions.some((a:any,i:number) => ['activity','recommendation','mandatory','instruction'].some(k => a[k] !== value.authoritative_decision.actions[i][k]))) throw new Error('Unexpected advisory schema');
+    || value.actions.some((a:any,i:number) => ['activity','recommendation','mandatory','instruction'].some(k => a[k] !== value.authoritative_decision.actions[i][k])
+      || JSON.stringify(a.applicable_grades) !== JSON.stringify(value.authoritative_decision.actions[i].applicable_grades)
+      || JSON.stringify(a.rule_ids) !== JSON.stringify(value.authoritative_decision.actions[i].rule_ids)
+      || JSON.stringify(a.evidence_ids) !== JSON.stringify(value.authoritative_decision.actions[i].evidence_ids))) throw new Error('Unexpected advisory schema');
   return value;
 }
 export {verdictExpired};

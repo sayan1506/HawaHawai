@@ -1,0 +1,517 @@
+{
+  "school_id": "delhi-demo-school",
+  "status": "DATA_INSUFFICIENT",
+  "verdict": null,
+  "decision": "DATA_INSUFFICIENT",
+  "generated_at": "2026-10-08T08:00:00+00:00",
+  "evaluation_time": "2026-10-08T08:00:00+00:00",
+  "valid_until": "2026-10-08T08:00:01+00:00",
+  "rule_version": "school-safety-v1",
+  "policy_version": "school-safety-v1",
+  "decision_id": "e15538178b3ac577035a95d6",
+  "rule_ids": [
+    "REGULATORY_VERIFY_STATUS",
+    "MISSING_STATION_OBSERVATIONS",
+    "MISSING_REQUIRED_EVIDENCE"
+  ],
+  "reasons": [
+    "No validated fresh physical station US-AQI evidence is available. Model-only evidence cannot justify GO_OUTDOORS.",
+    "Official activation/revocation or school-order review is unknown, stale or conflicting. No official stage is inferred.",
+    "Required regulatory, representative physical-observation or forecast evidence is incomplete. Verify before proceeding outdoors."
+  ],
+  "rule_evaluations": [
+    {
+      "rule_id": "MISSING_STATION_OBSERVATIONS",
+      "priority": 5,
+      "message": "No validated fresh physical station US-AQI evidence is available. Model-only evidence cannot justify GO_OUTDOORS.",
+      "evidence_ids": []
+    },
+    {
+      "rule_id": "REGULATORY_VERIFY_STATUS",
+      "priority": 6,
+      "message": "Official activation/revocation or school-order review is unknown, stale or conflicting. No official stage is inferred.",
+      "evidence_ids": []
+    },
+    {
+      "rule_id": "MISSING_REQUIRED_EVIDENCE",
+      "priority": 6,
+      "message": "Required regulatory, representative physical-observation or forecast evidence is incomplete. Verify before proceeding outdoors.",
+      "evidence_ids": [
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "activity": "assembly",
+      "instruction": "Verify current official orders and missing evidence before proceeding outdoors; use a suitable indoor alternative meanwhile.",
+      "recommendation": "VERIFY_BEFORE_PROCEEDING",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "REGULATORY_VERIFY_STATUS",
+        "MISSING_STATION_OBSERVATIONS",
+        "MISSING_REQUIRED_EVIDENCE"
+      ],
+      "evidence_ids": [
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    },
+    {
+      "activity": "sports",
+      "instruction": "Verify current official orders and missing evidence before proceeding outdoors; use a suitable indoor alternative meanwhile.",
+      "recommendation": "VERIFY_BEFORE_PROCEEDING",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "REGULATORY_VERIFY_STATUS",
+        "MISSING_STATION_OBSERVATIONS",
+        "MISSING_REQUIRED_EVIDENCE"
+      ],
+      "evidence_ids": [
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    },
+    {
+      "activity": "physical_education",
+      "instruction": "Verify current official orders and missing evidence before proceeding outdoors; use a suitable indoor alternative meanwhile.",
+      "recommendation": "VERIFY_BEFORE_PROCEEDING",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "REGULATORY_VERIFY_STATUS",
+        "MISSING_STATION_OBSERVATIONS",
+        "MISSING_REQUIRED_EVIDENCE"
+      ],
+      "evidence_ids": [
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    },
+    {
+      "activity": "other",
+      "instruction": "Verify current official orders and missing evidence before proceeding outdoors; use a suitable indoor alternative meanwhile.",
+      "recommendation": "VERIFY_BEFORE_PROCEEDING",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "REGULATORY_VERIFY_STATUS",
+        "MISSING_STATION_OBSERVATIONS",
+        "MISSING_REQUIRED_EVIDENCE"
+      ],
+      "evidence_ids": [
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    },
+    {
+      "activity": "indoor",
+      "recommendation": "ASSESS_INDOOR_ALTERNATIVE",
+      "instruction": "Select an indoor alternative only after assessing ventilation, particle filtration and students' needs; indoor air has not been measured.",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "REGULATORY_VERIFY_STATUS",
+        "MISSING_STATION_OBSERVATIONS",
+        "MISSING_REQUIRED_EVIDENCE"
+      ],
+      "evidence_ids": [
+        "epa-school-guidance-2014"
+      ]
+    },
+    {
+      "activity": "administration",
+      "recommendation": "VERIFY_STATUS",
+      "instruction": "Review current CAQM and Delhi school notices; do not treat this activity recommendation as a school closure order.",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "REGULATORY_VERIFY_STATUS",
+        "MISSING_STATION_OBSERVATIONS",
+        "MISSING_REQUIRED_EVIDENCE"
+      ],
+      "evidence_ids": [
+        "caqm-schedule-2026-09-29",
+        "caqm-direction-104-2026-09-29",
+        "caqm-advisory-18-2026-09-10",
+        "delhi-school-circular-2026-01-20",
+        "delhi-revocation-2026-01-22"
+      ]
+    },
+    {
+      "activity": "parent_communication",
+      "recommendation": "STRUCTURED_REASONS_READY",
+      "instruction": "Use these deterministic reasons and caveats for later communication; no AI or bilingual advisory has been generated.",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "REGULATORY_VERIFY_STATUS",
+        "MISSING_STATION_OBSERVATIONS",
+        "MISSING_REQUIRED_EVIDENCE"
+      ],
+      "evidence_ids": [
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    }
+  ],
+  "evidence_ids": [
+    "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+    "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+    "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+    "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+  ],
+  "evidence": [
+    {
+      "evidence_id": "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+      "kind": "modeled_current",
+      "freshness": "fresh",
+      "value": 50,
+      "scale": "US_AQI",
+      "source_id": "open-meteo-cams-global",
+      "source_type": "model_forecast",
+      "timestamp": "2026-10-08T07:55:00+00:00",
+      "pollutants": [
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T07:55:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm2_5",
+          "value": 45,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        },
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T07:55:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm10",
+          "value": 80,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        }
+      ],
+      "station_location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      }
+    },
+    {
+      "evidence_id": "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+      "kind": "activity_forecast",
+      "freshness": "fresh",
+      "value": 50,
+      "scale": "US_AQI",
+      "source_id": "open-meteo-cams-global",
+      "source_type": "model_forecast",
+      "timestamp": "2026-10-08T08:00:00+00:00",
+      "pollutants": [
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T08:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm2_5",
+          "value": 45,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        },
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T08:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm10",
+          "value": 80,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        }
+      ],
+      "station_location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      }
+    },
+    {
+      "evidence_id": "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+      "kind": "activity_forecast",
+      "freshness": "fresh",
+      "value": 50,
+      "scale": "US_AQI",
+      "source_id": "open-meteo-cams-global",
+      "source_type": "model_forecast",
+      "timestamp": "2026-10-08T09:00:00+00:00",
+      "pollutants": [
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T09:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm2_5",
+          "value": 45,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        },
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T09:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm10",
+          "value": 80,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        }
+      ],
+      "station_location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      }
+    },
+    {
+      "evidence_id": "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00",
+      "kind": "activity_forecast",
+      "freshness": "fresh",
+      "value": 50,
+      "scale": "US_AQI",
+      "source_id": "open-meteo-cams-global",
+      "source_type": "model_forecast",
+      "timestamp": "2026-10-08T10:00:00+00:00",
+      "pollutants": [
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T10:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm2_5",
+          "value": 45,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        },
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T10:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm10",
+          "value": 80,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        }
+      ],
+      "station_location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      }
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "open-meteo-cams-global",
+      "name": "Open-Meteo / Copernicus CAMS Global",
+      "url": "https://open-meteo.com/en/docs/air-quality-api",
+      "kind": "model_forecast",
+      "observed_at": null,
+      "retrieved_at": "2026-10-08T08:00:00+00:00",
+      "valid_until": null,
+      "freshness": "fresh",
+      "location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      },
+      "limitations": [
+        "Modeled grid values, not physical station measurements.",
+        "Approximately 45 km global grid; native 3-hour values interpolated hourly; local school exposure may differ.",
+        "CAMS global forecast updates approximately every 12 hours. API retrieval time is not model initialization time.",
+        "Attribution: Open-Meteo and Copernicus CAMS (https://ads.atmosphere.copernicus.eu/datasets/cams-global-atmospheric-composition-forecasts)."
+      ]
+    }
+  ],
+  "policy_sources": [
+    {
+      "evidence_id": "epa-school-guidance-2014",
+      "title": "Air Quality and Outdoor Activity Guidance for Schools",
+      "url": "https://document.airnow.gov/air-quality-and-outdoor-guidance-for-schools.pdf",
+      "authority": "US EPA / CDC",
+      "published_on": "2014-08",
+      "scope": "US AQI health guidance; project-adopted precaution, not Indian law"
+    },
+    {
+      "evidence_id": "epa-us-aqi-categories",
+      "title": "AQI Basics",
+      "url": "https://www.airnow.gov/aqi/aqi-basics/",
+      "authority": "US EPA / AirNow",
+      "published_on": null,
+      "scope": "US AQI category boundaries only; no scale conversion"
+    }
+  ],
+  "regulatory_status": {
+    "status": "VERIFY_STATUS",
+    "stage": null,
+    "active_stage": null,
+    "verification_state": "UNKNOWN",
+    "effective_from": null,
+    "verified_at": null,
+    "verification_expires_at": null,
+    "order_url": null,
+    "jurisdiction": "NCT_DELHI",
+    "restrictions": [],
+    "applicable_restrictions": [],
+    "unverified_restrictions": [],
+    "sources": [],
+    "source_documents": [
+      {
+        "document_id": "caqm-schedule-2026-09-29",
+        "title": "Revised Graded Response Action Plan for NCR, 29 September 2026",
+        "authority": "CAQM",
+        "url": "https://caqm.nic.in/FileUploadDomain/WebsiteDocument/GRAP/GRAP%20Schedule/01fcdebf-83e1-4cfe-bc0c-d0b1470a4d4e.pdf",
+        "published_on": "2026-09-29",
+        "document_type": "SCHEDULE",
+        "access_status": "RESEARCHED",
+        "sha256": "473e245b758c68be776b1d732be288abdbb5bd9084abf8fcdde9bcd3afcfa413",
+        "effective_from": null,
+        "effective_until": null,
+        "verification_status": "UNVERIFIED"
+      },
+      {
+        "document_id": "caqm-direction-104-2026-09-29",
+        "title": "Direction 104: revised GRAP schedule with immediate effect and invocation requirement",
+        "authority": "CAQM",
+        "url": "https://caqm.nic.in/FileUploadDomain/WebsiteDocument/Advisories%20and%20Direction/Directions/fa4070ca-5b45-4161-b220-0871227ae9ea.pdf",
+        "published_on": "2026-09-29",
+        "document_type": "SCHEDULE",
+        "access_status": "RESEARCHED",
+        "sha256": "b258399cdc8c7f3ac009fb23bb19f8da557df1eff6094f6e8849610a17286d5b",
+        "effective_from": null,
+        "effective_until": null,
+        "verification_status": "UNVERIFIED"
+      },
+      {
+        "document_id": "caqm-advisory-18-2026-09-10",
+        "title": "Advisory 18: rescheduling physical sports competitions in November-December",
+        "authority": "CAQM",
+        "url": "https://caqm.nic.in/FileUploadDomain/WebsiteDocument/Advisories%20and%20Direction/Advisories/a68ffad1-874d-4e7d-a366-e3ec9f97be0e.pdf",
+        "published_on": "2026-09-10",
+        "document_type": "ADVISORY",
+        "access_status": "RESEARCHED",
+        "sha256": "2f6f7bbfecd4094565c27f47fe0e483b1ae2e84ad523438d2d88a3cf9e422417",
+        "effective_from": null,
+        "effective_until": null,
+        "verification_status": "UNVERIFIED"
+      },
+      {
+        "document_id": "delhi-school-circular-2026-01-20",
+        "title": "Normal classes VI-IX and XI; hybrid up to V (historical)",
+        "authority": "Directorate of Education, GNCT Delhi",
+        "url": "https://edustud.nic.in/upload/upload_2025_26/Schoolbranch_regardingresumptionofnormalclassesinschoolsforclasses6to9and11_dt_20012026_56.pdf",
+        "published_on": "2026-01-20",
+        "document_type": "SCHOOL_ORDER",
+        "access_status": "RESEARCHED",
+        "sha256": "4771b584f42eeda9af0bf03601bd4aec972688fc5945410e157ce9b24c72cd37",
+        "effective_from": null,
+        "effective_until": null,
+        "verification_status": "UNVERIFIED"
+      },
+      {
+        "document_id": "delhi-revocation-2026-01-22",
+        "title": "Revocation of GRAP III; normal physical classes for all students (historical)",
+        "authority": "Directorate of Education / enclosed CAQM order",
+        "url": "https://edustud.nic.in/upload/upload_2025_26/Schoolbranch_RegardingRevocationofGRAPIIIMeasures_dt_22012026_62.pdf",
+        "published_on": "2026-01-22",
+        "document_type": "REVOCATION",
+        "access_status": "RESEARCHED",
+        "sha256": "090ed0b8c86f8f1464da205209b87d1f8c181ccbac88c8ffabd621c8f869fd7a",
+        "effective_from": null,
+        "effective_until": null,
+        "verification_status": "UNVERIFIED"
+      }
+    ],
+    "snapshot_version": "research-2026-10-08-v2",
+    "schedule_version": "grap-2026-09-29",
+    "evaluation_time": "2026-10-08T08:00:00+00:00",
+    "verification_action_recorded": false,
+    "next_transition_at": null,
+    "warnings": [
+      "Current stage UNKNOWN: no human verification action is recorded and the complete activation/revocation and Delhi school-order history through today has not been attested.",
+      "CAQM Direction 104 of 29 September 2026 makes the revised schedule immediately applicable upon official stage invocation. November 2025 rules are historical, not assumed current.",
+      "Current schedule school clauses are source-hash-bound in a separate catalog. They cannot become mandatory live claims without fresh human verification and official invocation evidence.",
+      "Historical January Delhi circulars do not establish current school restrictions; subsequent orders and grade applicability require review.",
+      "Advisory 18 of 10 September 2026 addresses November-December physical sports scheduling. It is not a claimed current mandatory PE ban or school closure.",
+      "VERIFY_STATUS: current official GRAP activation/revocation history is not verified."
+    ]
+  },
+  "data_quality": {
+    "official_observations_available": false,
+    "station_observations_available": false,
+    "modeled_data_available": true,
+    "forecast_available": true,
+    "current_freshness": "fresh",
+    "forecast_freshness": "fresh"
+  },
+  "activity_context": {
+    "jurisdiction": "NCT_DELHI",
+    "grade": null,
+    "activity": "all",
+    "window_start": "2026-10-08T08:00:00+00:00",
+    "window_end": "2026-10-08T11:00:00+00:00"
+  },
+  "requires_regulatory_verification": true,
+  "warnings": [
+    "Current stage UNKNOWN: no human verification action is recorded and the complete activation/revocation and Delhi school-order history through today has not been attested.",
+    "CAQM Direction 104 of 29 September 2026 makes the revised schedule immediately applicable upon official stage invocation. November 2025 rules are historical, not assumed current.",
+    "Current schedule school clauses are source-hash-bound in a separate catalog. They cannot become mandatory live claims without fresh human verification and official invocation evidence.",
+    "Historical January Delhi circulars do not establish current school restrictions; subsequent orders and grade applicability require review.",
+    "Advisory 18 of 10 September 2026 addresses November-December physical sports scheduling. It is not a claimed current mandatory PE ban or school closure.",
+    "VERIFY_STATUS: current official GRAP activation/revocation history is not verified.",
+    "CAMS_GLOBAL_APPROX_45_KM_GRID",
+    "MISSING_CARBON_MONOXIDE",
+    "MISSING_NITROGEN_DIOXIDE",
+    "MISSING_OZONE",
+    "MISSING_SULPHUR_DIOXIDE",
+    "MODELED_NOT_STATION_OBSERVATIONS",
+    "MODEL_RUN_TIMESTAMP_NOT_PROVIDED",
+    "US_AQI_NOT_INDIAN_AQI",
+    "OFFICIAL_OBSERVATIONS_UNAVAILABLE: authenticated access and pollutant semantics not verified; no official Indian AQI available.",
+    "OPENAQ_NOT_INTEGRATED: API key and Delhi-NCR station coverage not verified.",
+    "Official station observations are unavailable; modeled US AQI is not official Indian AQI.",
+    "GO_OUTDOORS is conditional advice, not a guarantee of safe air.",
+    "INDOOR_ONLY concerns activities, not automatic school closure, online classes or clean indoor air; check filtration and suitability.",
+    "US AQI is never compared with Indian GRAP thresholds. Raw concentrations are preserved but not converted into AQI.",
+    "No grade selected: aggregate precaution includes applicable grade groups; mandatory actions list their exact grades (0 means pre-primary)."
+  ]
+}

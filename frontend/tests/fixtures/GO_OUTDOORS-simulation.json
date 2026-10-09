@@ -1,0 +1,498 @@
+{
+  "school_id": "delhi-demo-school",
+  "status": "decided",
+  "verdict": "GO_OUTDOORS",
+  "decision": "GO_OUTDOORS",
+  "generated_at": "2026-10-08T08:00:00+00:00",
+  "evaluation_time": "2026-10-08T08:00:00+00:00",
+  "valid_until": "2026-10-08T08:00:01+00:00",
+  "rule_version": "school-safety-v1",
+  "policy_version": "school-safety-v1",
+  "decision_id": "07c6bf0d6d6ce3b64a8beae6",
+  "rule_ids": [
+    "POSITIVE_EVIDENCE_REQUIREMENTS_MET"
+  ],
+  "reasons": [
+    "Verified regulation, fresh co-located physical US-AQI evidence and the next three forecast hours meet the documented outdoor recommendation prerequisites. This is not a guarantee of safe air."
+  ],
+  "rule_evaluations": [
+    {
+      "rule_id": "POSITIVE_EVIDENCE_REQUIREMENTS_MET",
+      "priority": 5,
+      "message": "Verified regulation, fresh co-located physical US-AQI evidence and the next three forecast hours meet the documented outdoor recommendation prerequisites. This is not a guarantee of safe air.",
+      "evidence_ids": [
+        "station_observation#simulation-station#2026-10-08T07:55:00+00:00",
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "activity": "assembly",
+      "instruction": "Outdoor activity may proceed under the documented prerequisites; monitor symptoms and provide sensitive-student alternatives.",
+      "recommendation": "NORMAL_WITH_CAVEATS",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "POSITIVE_EVIDENCE_REQUIREMENTS_MET"
+      ],
+      "evidence_ids": [
+        "station_observation#simulation-station#2026-10-08T07:55:00+00:00",
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    },
+    {
+      "activity": "sports",
+      "instruction": "Outdoor activity may proceed under the documented prerequisites; monitor symptoms and provide sensitive-student alternatives.",
+      "recommendation": "NORMAL_WITH_CAVEATS",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "POSITIVE_EVIDENCE_REQUIREMENTS_MET"
+      ],
+      "evidence_ids": [
+        "station_observation#simulation-station#2026-10-08T07:55:00+00:00",
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    },
+    {
+      "activity": "physical_education",
+      "instruction": "Outdoor activity may proceed under the documented prerequisites; monitor symptoms and provide sensitive-student alternatives.",
+      "recommendation": "NORMAL_WITH_CAVEATS",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "POSITIVE_EVIDENCE_REQUIREMENTS_MET"
+      ],
+      "evidence_ids": [
+        "station_observation#simulation-station#2026-10-08T07:55:00+00:00",
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    },
+    {
+      "activity": "other",
+      "instruction": "Outdoor activity may proceed under the documented prerequisites; monitor symptoms and provide sensitive-student alternatives.",
+      "recommendation": "NORMAL_WITH_CAVEATS",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "POSITIVE_EVIDENCE_REQUIREMENTS_MET"
+      ],
+      "evidence_ids": [
+        "station_observation#simulation-station#2026-10-08T07:55:00+00:00",
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    },
+    {
+      "activity": "indoor",
+      "recommendation": "ASSESS_INDOOR_ALTERNATIVE",
+      "instruction": "Select an indoor alternative only after assessing ventilation, particle filtration and students' needs; indoor air has not been measured.",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "POSITIVE_EVIDENCE_REQUIREMENTS_MET"
+      ],
+      "evidence_ids": [
+        "epa-school-guidance-2014"
+      ]
+    },
+    {
+      "activity": "administration",
+      "recommendation": "REVIEW_ORDERS",
+      "instruction": "Review current CAQM and Delhi school notices; do not treat this activity recommendation as a school closure order.",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "POSITIVE_EVIDENCE_REQUIREMENTS_MET"
+      ],
+      "evidence_ids": [
+        "schedule",
+        "revoke-all"
+      ]
+    },
+    {
+      "activity": "parent_communication",
+      "recommendation": "STRUCTURED_REASONS_READY",
+      "instruction": "Use these deterministic reasons and caveats for later communication; no AI or bilingual advisory has been generated.",
+      "mandatory": false,
+      "applicable_grades": [],
+      "rule_ids": [
+        "POSITIVE_EVIDENCE_REQUIREMENTS_MET"
+      ],
+      "evidence_ids": [
+        "station_observation#simulation-station#2026-10-08T07:55:00+00:00",
+        "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+        "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+      ]
+    }
+  ],
+  "evidence_ids": [
+    "station_observation#simulation-station#2026-10-08T07:55:00+00:00",
+    "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+    "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+    "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+    "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00"
+  ],
+  "evidence": [
+    {
+      "evidence_id": "station_observation#simulation-station#2026-10-08T07:55:00+00:00",
+      "kind": "station_observation",
+      "freshness": "fresh",
+      "value": 50,
+      "scale": "US_AQI",
+      "source_id": "simulation-station",
+      "source_type": "measurement",
+      "timestamp": "2026-10-08T07:55:00+00:00",
+      "pollutants": [
+        {
+          "source_id": "simulation-station",
+          "observed_at": "2026-10-08T07:55:00+00:00",
+          "forecast_for": null,
+          "source_type": "measurement",
+          "name": "pm2_5",
+          "value": 45,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        },
+        {
+          "source_id": "simulation-station",
+          "observed_at": "2026-10-08T07:55:00+00:00",
+          "forecast_for": null,
+          "source_type": "measurement",
+          "name": "pm10",
+          "value": 80,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        }
+      ],
+      "station_location": {
+        "latitude": 28.6139,
+        "longitude": 77.209,
+        "station_id": "SIMULATION",
+        "distance_km": 0
+      }
+    },
+    {
+      "evidence_id": "modeled_current#open-meteo-cams-global#2026-10-08T07:55:00+00:00",
+      "kind": "modeled_current",
+      "freshness": "fresh",
+      "value": 50,
+      "scale": "US_AQI",
+      "source_id": "open-meteo-cams-global",
+      "source_type": "model_forecast",
+      "timestamp": "2026-10-08T07:55:00+00:00",
+      "pollutants": [
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T07:55:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm2_5",
+          "value": 45,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        },
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T07:55:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm10",
+          "value": 80,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        }
+      ],
+      "station_location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      }
+    },
+    {
+      "evidence_id": "activity_forecast#open-meteo-cams-global#2026-10-08T08:00:00+00:00",
+      "kind": "activity_forecast",
+      "freshness": "fresh",
+      "value": 50,
+      "scale": "US_AQI",
+      "source_id": "open-meteo-cams-global",
+      "source_type": "model_forecast",
+      "timestamp": "2026-10-08T08:00:00+00:00",
+      "pollutants": [
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T08:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm2_5",
+          "value": 45,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        },
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T08:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm10",
+          "value": 80,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        }
+      ],
+      "station_location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      }
+    },
+    {
+      "evidence_id": "activity_forecast#open-meteo-cams-global#2026-10-08T09:00:00+00:00",
+      "kind": "activity_forecast",
+      "freshness": "fresh",
+      "value": 50,
+      "scale": "US_AQI",
+      "source_id": "open-meteo-cams-global",
+      "source_type": "model_forecast",
+      "timestamp": "2026-10-08T09:00:00+00:00",
+      "pollutants": [
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T09:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm2_5",
+          "value": 45,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        },
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T09:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm10",
+          "value": 80,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        }
+      ],
+      "station_location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      }
+    },
+    {
+      "evidence_id": "activity_forecast#open-meteo-cams-global#2026-10-08T10:00:00+00:00",
+      "kind": "activity_forecast",
+      "freshness": "fresh",
+      "value": 50,
+      "scale": "US_AQI",
+      "source_id": "open-meteo-cams-global",
+      "source_type": "model_forecast",
+      "timestamp": "2026-10-08T10:00:00+00:00",
+      "pollutants": [
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T10:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm2_5",
+          "value": 45,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        },
+        {
+          "source_id": "open-meteo-cams-global",
+          "observed_at": null,
+          "forecast_for": "2026-10-08T10:00:00+00:00",
+          "source_type": "model_forecast",
+          "name": "pm10",
+          "value": 80,
+          "unit": "ug/m3",
+          "original_unit": "μg/m³",
+          "averaging_period": "model instantaneous concentration"
+        }
+      ],
+      "station_location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      }
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "open-meteo-cams-global",
+      "name": "Open-Meteo / Copernicus CAMS Global",
+      "url": "https://open-meteo.com/en/docs/air-quality-api",
+      "kind": "model_forecast",
+      "observed_at": null,
+      "retrieved_at": "2026-10-08T08:00:00+00:00",
+      "valid_until": null,
+      "freshness": "fresh",
+      "location": {
+        "latitude": 28.6,
+        "longitude": 77.2,
+        "station_id": null,
+        "distance_km": null
+      },
+      "limitations": [
+        "Modeled grid values, not physical station measurements.",
+        "Approximately 45 km global grid; native 3-hour values interpolated hourly; local school exposure may differ.",
+        "CAMS global forecast updates approximately every 12 hours. API retrieval time is not model initialization time.",
+        "Attribution: Open-Meteo and Copernicus CAMS (https://ads.atmosphere.copernicus.eu/datasets/cams-global-atmospheric-composition-forecasts)."
+      ]
+    },
+    {
+      "source_id": "simulation-station",
+      "name": "SIMULATED co-located station",
+      "url": "https://example.invalid/simulation",
+      "kind": "measurement",
+      "observed_at": "2026-10-08T07:55:00+00:00",
+      "retrieved_at": "2026-10-08T08:00:00+00:00",
+      "valid_until": null,
+      "freshness": "fresh",
+      "location": {
+        "latitude": 28.6139,
+        "longitude": 77.209,
+        "station_id": "SIMULATION",
+        "distance_km": 0
+      },
+      "limitations": []
+    }
+  ],
+  "policy_sources": [
+    {
+      "evidence_id": "epa-school-guidance-2014",
+      "title": "Air Quality and Outdoor Activity Guidance for Schools",
+      "url": "https://document.airnow.gov/air-quality-and-outdoor-guidance-for-schools.pdf",
+      "authority": "US EPA / CDC",
+      "published_on": "2014-08",
+      "scope": "US AQI health guidance; project-adopted precaution, not Indian law"
+    },
+    {
+      "evidence_id": "epa-us-aqi-categories",
+      "title": "AQI Basics",
+      "url": "https://www.airnow.gov/aqi/aqi-basics/",
+      "authority": "US EPA / AirNow",
+      "published_on": null,
+      "scope": "US AQI category boundaries only; no scale conversion"
+    }
+  ],
+  "regulatory_status": {
+    "status": "verified",
+    "stage": 0,
+    "active_stage": null,
+    "verification_state": "VERIFIED_INACTIVE",
+    "effective_from": "2026-10-08T07:00:00+00:00",
+    "verified_at": "2026-10-08T07:55:00+00:00",
+    "verification_expires_at": "2026-10-08T09:00:00+00:00",
+    "order_url": "https://caqm.nic.in/",
+    "jurisdiction": "NCT_DELHI",
+    "restrictions": [],
+    "applicable_restrictions": [],
+    "unverified_restrictions": [],
+    "sources": [],
+    "source_documents": [
+      {
+        "document_id": "schedule",
+        "title": "SIMULATION ONLY - schedule",
+        "authority": "Simulated test authority, not current government evidence",
+        "url": "https://caqm.nic.in/",
+        "published_on": "2026-09-29",
+        "document_type": "SCHEDULE",
+        "access_status": "HUMAN_REVIEWED",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "effective_from": null,
+        "effective_until": null,
+        "verification_status": "HUMAN_REVIEWED"
+      },
+      {
+        "document_id": "revoke-all",
+        "title": "SIMULATION ONLY - revoke-all",
+        "authority": "Simulated test authority, not current government evidence",
+        "url": "https://caqm.nic.in/",
+        "published_on": "2026-10-08",
+        "document_type": "REVOCATION",
+        "access_status": "HUMAN_REVIEWED",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "effective_from": null,
+        "effective_until": null,
+        "verification_status": "HUMAN_REVIEWED"
+      }
+    ],
+    "snapshot_version": "simulation-v1",
+    "schedule_version": "simulation-2026-09-29",
+    "evaluation_time": "2026-10-08T08:00:00+00:00",
+    "verification_action_recorded": true,
+    "next_transition_at": null,
+    "warnings": [
+      "SIMULATION ONLY - never publish"
+    ]
+  },
+  "data_quality": {
+    "official_observations_available": false,
+    "station_observations_available": true,
+    "modeled_data_available": true,
+    "forecast_available": true,
+    "current_freshness": "fresh",
+    "forecast_freshness": "fresh"
+  },
+  "activity_context": {
+    "jurisdiction": "NCT_DELHI",
+    "grade": null,
+    "activity": "all",
+    "window_start": "2026-10-08T08:00:00+00:00",
+    "window_end": "2026-10-08T11:00:00+00:00"
+  },
+  "requires_regulatory_verification": false,
+  "warnings": [
+    "SIMULATION ONLY - never publish",
+    "CAMS_GLOBAL_APPROX_45_KM_GRID",
+    "MISSING_CARBON_MONOXIDE",
+    "MISSING_NITROGEN_DIOXIDE",
+    "MISSING_OZONE",
+    "MISSING_SULPHUR_DIOXIDE",
+    "MODELED_NOT_STATION_OBSERVATIONS",
+    "MODEL_RUN_TIMESTAMP_NOT_PROVIDED",
+    "US_AQI_NOT_INDIAN_AQI",
+    "OFFICIAL_OBSERVATIONS_UNAVAILABLE: authenticated access and pollutant semantics not verified; no official Indian AQI available.",
+    "OPENAQ_NOT_INTEGRATED: API key and Delhi-NCR station coverage not verified.",
+    "GO_OUTDOORS is conditional advice, not a guarantee of safe air.",
+    "INDOOR_ONLY concerns activities, not automatic school closure, online classes or clean indoor air; check filtration and suitability.",
+    "US AQI is never compared with Indian GRAP thresholds. Raw concentrations are preserved but not converted into AQI.",
+    "No grade selected: aggregate precaution includes applicable grade groups; mandatory actions list their exact grades (0 means pre-primary)."
+  ]
+}
