@@ -1,5 +1,7 @@
 """Bounded HTTPS/CORS/schema verification of the owned Phase 5 deployment."""
+import argparse
 import json
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -9,6 +11,7 @@ from urllib.error import HTTPError
 
 import boto3
 from botocore.config import Config
+from dotenv import dotenv_values
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'backend'))
@@ -20,6 +23,10 @@ SCHOOL = '/v1/schools/delhi-demo-school'
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--phase', default='phase5', choices=['phase5', 'phase6'])
+    args = parser.parse_args()
+    keys=[v.encode() for k,v in dotenv_values(ROOT/'backend/.env').items() if k.endswith('API_KEY') and v and len(v)>=12]
     results = []
     def call(path, schema=None, method='GET', data=None, origin=ORIGIN, expected=200):
         time.sleep(0.3)  # Stay below existing API throttles; no retries.
@@ -31,6 +38,7 @@ def main():
         except HTTPError as error: response = error
         with response:
             raw = response.read(); body = json.loads(raw) if raw else None
+            assert not any(key in raw for key in keys), 'Private key in public response'
             assert response.status == expected, (method, path, response.status)
             cors = response.headers.get('Access-Control-Allow-Origin')
             assert cors == ORIGIN if origin == ORIGIN else cors is None, (method, path, cors)
@@ -51,6 +59,10 @@ def main():
     assert advisory['verdict_id'] == verdict['decision_id']
     posted = call(SCHOOL+'/advisory', 'Advisory', method='POST', data={'verdict_id': verdict['decision_id'], 'languages': ['en', 'hi']})
     assert posted['en'] and posted['hi'] and posted['decision'] == verdict['decision']
+    for explanation in [advisory, posted]:
+        assert explanation['valid_until'] == verdict['valid_until']
+        assert explanation['authoritative_decision']['actions'] == verdict['actions']
+        assert [{k:v for k,v in a.items() if k not in {'en','hi'}} for a in explanation['actions']] == verdict['actions']
     for route in [SCHOOL+'/verdict', SCHOOL+'/advisory']:
         call(route, method='OPTIONS', expected=204)
         call(route, method='OPTIONS', origin='https://untrusted.example', expected=204)
@@ -64,6 +76,14 @@ def main():
             hosted[asset] = {'status': response.status, 'bytes': len(data), 'content_type': response.headers.get('Content-Type')}
             if asset == '/': assert 'Content-Security-Policy' in response.headers and b'assets/index-' in data
             if asset.endswith('.png'): assert data.startswith(b'\x89PNG\r\n\x1a\n')
+            if args.phase=='phase6':
+                assert data==(ROOT/'frontend/dist'/('index.html' if asset=='/' else asset.lstrip('/'))).read_bytes(), 'Hosted artifact does not match verified build'
+    if args.phase=='phase6':
+        for asset in re.findall(r'(?:src|href)="(/assets/[^" ]+)"', (ROOT/'frontend/dist/index.html').read_text(encoding='utf-8')):
+            with urlopen(ORIGIN+asset,timeout=20) as response:
+                data=response.read();assert response.status==200 and data==(ROOT/'frontend/dist'/asset.lstrip('/')).read_bytes()
+                assert not any(key in data for key in keys)
+                hosted[asset]={'status':response.status,'bytes':len(data),'matches_build':True}
 
     session = boto3.Session(profile_name='hawahawai', region_name='us-east-1')
     def client(service): return session.client(service, config=Config(connect_timeout=3, read_timeout=8, retries={'total_max_attempts': 1}))
@@ -82,7 +102,7 @@ def main():
     result = {'checked_at': datetime.now(timezone.utc).isoformat(), 'url': ORIGIN, 'requests': results, 'hosted': hosted,
               'stack_status': stack['StackStatus'], 'resources': len(resources), 'lambda': {'state': function['State'], 'last_update': function['LastUpdateStatus']},
               'cors': cors, 'amplify_job': {'id': job['jobId'], 'status': job['status']}}
-    (ROOT/'.local/phase5-live-smoke.json').write_text(json.dumps(result, indent=2)+'\n', encoding='utf-8')
+    (ROOT/f'.local/{args.phase}-live-smoke.json').write_text(json.dumps(result, indent=2)+'\n', encoding='utf-8')
     print(json.dumps({'checked_at': result['checked_at'], 'api_checks': len(results), 'hosted_assets': len(hosted), 'stack_status': result['stack_status'], 'cors': 'exact allowlist passed', 'amplify': job['status']}))
 
 

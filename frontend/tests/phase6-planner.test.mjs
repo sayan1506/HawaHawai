@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {localDay,tomorrowOutlook,TomorrowPlanner} from '../src/TomorrowPlanner.tsx';
+const fixture=()=>JSON.parse(readFileSync(new URL('./fixtures/forecast-simulation.json',import.meta.url),'utf8'));
+const now=Date.parse('2026-10-08T08:00:00Z');
+const html=(data,state='success',online=true)=>renderToStaticMarkup(React.createElement(TomorrowPlanner,{forecast:{state,data},online,now}));
+test('planner uses IST day rather than UTC and rolls years correctly',()=>{assert.equal(localDay(Date.parse('2026-12-31T20:00:00Z')),'2027-01-01');assert.equal(tomorrowOutlook(undefined,Date.parse('2026-12-31T17:00:00Z')).tomorrow,'2027-01-01');assert.equal(tomorrowOutlook(undefined,Date.parse('2026-12-31T20:00:00Z')).tomorrow,'2027-01-02');});
+test('planner selects tomorrow only and reports descriptive modeled range',()=>{const v=tomorrowOutlook(fixture(),now);assert.equal(v.tomorrow,'2026-10-09');assert.equal(v.hours,24);assert.equal(v.missingAqi,0);assert.ok(v.points.every(p=>localDay(Date.parse(p.valid_at))===v.tomorrow));assert.match(v.range,/\d+–\d+/);});
+test('planner never substitutes missing AQI or missing hours with zero',()=>{const f=fixture();f.points=f.points.slice(0,20);f.points.forEach(p=>p.aqi=[]);const v=tomorrowOutlook(f,now);assert.equal(v.range,'Missing');assert.equal(v.hours,v.missingAqi);assert.ok(v.hours<24);assert.match(html(f),/partial or missing day coverage/);});
+test('planner unavailable envelope gives no activity considerations',()=>{const f=fixture();f.status='unavailable';assert.equal(tomorrowOutlook(f,now).hours,0);assert.match(html(f),/hours are unavailable/);assert.doesNotMatch(html(f),/planning-considerations/);});
+test('planner displays stale/expiry, explicit provisional distinction and limitations',()=>{const f=fixture();f.status='stale';const text=html(f);assert.match(text,/Provisional planning/);assert.match(text,/not tomorrow’s verdict/);assert.match(text,/Modeled outlook · stale/);assert.match(text,/US AQI is not Indian AQI/);assert.match(text,/Assembly/);assert.match(text,/Sports/);assert.match(text,/Physical education/);assert.doesNotMatch(text,/safe tomorrow|best safe time|GO_OUTDOORS/);});
+test('planner loading/error/offline states withhold offline planning values',()=>{assert.match(html(undefined,'loading'),/Loading tomorrow/);assert.match(html(undefined,'error'),/unavailable/);const text=html(fixture(),'success',false);assert.match(text,/unavailable offline/);assert.doesNotMatch(text,/Modeled US AQI range|planning-considerations/);});
+test('planner does not mutate forecast or derive safety decisions from values',()=>{const f=fixture();const saved=JSON.stringify(f);f.points.forEach(p=>p.aqi.forEach(a=>a.value=5));const low=tomorrowOutlook(f,now);assert.equal('decision' in low,false);assert.doesNotMatch(html(f),/safe tomorrow|Go outdoors/);assert.notEqual(JSON.stringify(f),saved);const before=JSON.stringify(f);tomorrowOutlook(f,now);assert.equal(JSON.stringify(f),before);});

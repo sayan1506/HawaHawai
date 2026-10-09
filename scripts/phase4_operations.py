@@ -15,7 +15,7 @@ from persistence.service import prefix, history_key
 from environmental.cache import DynamoCache
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--expect-time',default='07:00');parser.add_argument('--delivery',action='store_true');parser.add_argument('--replay',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--expect-time',default='07:00');parser.add_argument('--delivery',action='store_true');parser.add_argument('--replay',action='store_true');parser.add_argument('--phase',default='phase4',choices=['phase4','phase6']);args=parser.parse_args()
     session=boto3.Session(profile_name='hawahawai',region_name='us-east-1')
     def client(name):return session.client(name,config=Config(connect_timeout=2,read_timeout=5,retries={'total_max_attempts':1}))
     assert client('sts').get_caller_identity()['Account']=='649437299529'
@@ -60,6 +60,6 @@ def main():
             body=json.loads(response['Payload'].read());assert not response.get('FunctionError') and body['status']=='duplicate' and body['record_id']==record['record_id'] and body['ai_invoked'] is False
             result['private_duplicate_replay']=body
             result['replay_kind']='private same-day duplicate; not an additional Scheduler delivery'
-    (ROOT/'.local'/('phase4-scheduler-delivery.json' if args.delivery else 'phase4-scheduler-config.json')).write_text(json.dumps(result,indent=2),encoding='utf-8')
+    (ROOT/'.local'/(f'{args.phase}-scheduler-delivery.json' if args.delivery else f'{args.phase}-scheduler-config.json')).write_text(json.dumps(result,indent=2),encoding='utf-8')
     print(json.dumps(result))
 if __name__=='__main__':main()

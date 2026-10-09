@@ -2,9 +2,13 @@
 
 AI-powered School Air-Safety Advisor for the AWS Environmental Hacks hackathon. Pilot: one configurable Delhi-NCR school. Roadmap: [.response/HawaHawai_Project_Phases.md](.response/HawaHawai_Project_Phases.md).
 
-Phases 0-4 remain operational. Phase 5 adds the responsive decision-first PWA, read-only persisted school information, guarded bilingual explanations and static Amplify hosting. See the [Phase 5 checkpoint](.response/Phase_5_Checkpoint.md) and [architecture](.response/Phase_5_Architecture.md). Official station observations remain unavailable and current GRAP activation is **UNKNOWN**: documentary research is not a recorded human verification. Modeled US AQI never establishes an official stage. The `school-safety-v1` engine remains the only safety authority. Phase 6 requires separate authorization.
+Phases 0-5 remain operational. Phase 6 adds provisional tomorrow planning, deterministic source confidence, exact regulatory-action details, bounded indoor alternatives and current English/Hindi parent notices with native sharing, WhatsApp drafts and copying. See the [Phase 6 checkpoint](.response/Phase_6_Checkpoint.md) and [architecture](.response/Phase_6_Architecture.md). Official station observations remain unavailable and current GRAP activation is **UNKNOWN**: documentary research is not a recorded human verification. Modeled US AQI never establishes an official stage. The `school-safety-v1` engine remains the only safety authority. Expired/offline notices cannot be shared. Phase 7 requires separate authorization.
 
 Live PWA: https://production.d3vzi8hqeh0wba.amplifyapp.com
+
+Phase 6 verification: 212 backend tests, 91 frontend tests and 42 Chrome scenarios (39 simulations, 3 live AWS journeys). Run `npx --no-install playwright test --config frontend/playwright.phase6.config.ts` after a stable production build. No API/schema/infra change or extra automatic AI request was required. The optional map is deferred because verified monitoring-station data are unavailable.
+
+Static hosting uses the existing owned Amplify production branch. Review named-stack synth, template/security checks and the entire CDK diff before using `scripts/deploy_frontend.py --phase phase6 --deploy`. This uploader does not stage/commit/push or change infrastructure. `scripts/phase5_smoke.py --phase phase6` checks live contracts/CORS and hosted build bytes; generated evidence is saved separately from previous phases.
 
 Local frontend: http://127.0.0.1:5173/
 

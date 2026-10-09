@@ -1,4 +1,5 @@
 """Audit public source/build bytes without printing private key values."""
+import argparse
 import json
 import re
 from pathlib import Path
@@ -8,6 +9,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--phase', default='phase5', choices=['phase5', 'phase6'])
+    args = parser.parse_args()
     private = [value.encode() for key, value in dotenv_values(ROOT/'backend/.env').items()
                if value and (key.endswith('API_KEY') or 'SECRET' in key or 'TOKEN' in key) and len(value) >= 12]
     patterns = [rb'GEMINI_API_KEY|GROQ_API_KEY|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID',
@@ -31,8 +35,8 @@ def main():
     def audit_json(name):
         data = (ROOT/'.local'/name).read_bytes()
         return json.loads(data.decode('utf-16' if data.startswith((b'\xff\xfe',b'\xfe\xff')) else 'utf-8-sig'))
-    full = audit_json('phase5-npm-audit.json')
-    runtime = audit_json('phase5-runtime-npm-audit.json')
+    full = audit_json(f'{args.phase}-npm-audit.json')
+    runtime = audit_json(f'{args.phase}-runtime-npm-audit.json')
     def contrast(a, b):
         def lum(color):
             values = [int(color[n:n+2],16)/255 for n in [1,3,5]]
@@ -45,7 +49,7 @@ def main():
               'service_worker':'static precache with NetworkOnly safety/health routes',
               'dependency_audit':full['metadata']['vulnerabilities'],'frontend_runtime_audit':runtime['metadata']['vulnerabilities'],
               'contrast_ratios':contrasts}
-    (ROOT/'.local/phase5-public-security.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
+    (ROOT/f'.local/{args.phase}-public-security.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     print(json.dumps(result))
 
 

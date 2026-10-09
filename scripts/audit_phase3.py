@@ -15,7 +15,8 @@ sys.path.insert(0,str(ROOT/'backend'))
 from environmental.cache import decode_payload
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--local-only',action='store_true');parser.add_argument('--phase4',action='store_true');parser.add_argument('--output');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--local-only',action='store_true');parser.add_argument('--phase4',action='store_true');parser.add_argument('--phase6',action='store_true');parser.add_argument('--output');args=parser.parse_args()
+    if args.phase6 and not args.phase4: parser.error('--phase6 requires the existing --phase4 checks')
     keys=[v for k,v in dotenv_values(ROOT/'backend/.env').items() if k.endswith('API_KEY') and v and len(v)>=12]
     findings=[];count=0
     template_path=ROOT/'infra/cdk.out/HawaHawaiDev.template.json'
@@ -38,7 +39,7 @@ def main():
         assert client('sts').get_caller_identity()['Account']=='649437299529'
         cf=client('cloudformation');stack=cf.describe_stacks(StackName='HawaHawaiDev')['Stacks'][0]
         assert stack['StackStatus']=='UPDATE_COMPLETE'
-        resources=cf.describe_stack_resources(StackName='HawaHawaiDev')['StackResources'];assert len(resources)==(33 if args.phase4 else 26)
+        resources=cf.describe_stack_resources(StackName='HawaHawaiDev')['StackResources'];assert len(resources)==(35 if args.phase6 else 33 if args.phase4 else 26)
         function=client('lambda').get_function_configuration(FunctionName='hawahawai-dev-health')
         assert function['State']=='Active' and function['LastUpdateStatus']=='Successful'
         variables=function['Environment']['Variables']
@@ -89,7 +90,7 @@ def main():
                     except ValueError:pass
         result.update(stack_status=stack['StackStatus'],resource_count=len(resources),routes=[r['RouteKey'] for r in routes],lambda_memory_mb=function['MemorySize'],lambda_max_observed_mb=max(memory,default=None),
             lambda_observed_invocations=len(billed),lambda_billed_duration_ms=sum(billed),lambda_max_duration_ms=max(duration,default=None),lambda_max_init_ms=max(initialization,default=None),
-            iam_simulation=simulation,secret_scope='one CDK-owned HawaHawai secret only',cloudwatch_errors=errors,log_window_start_epoch=since,ai_events=ai,new_service='One daily EventBridge Scheduler; existing secret reused' if args.phase4 else 'Secrets Manager: one credential secret',billing_changed=False)
+            iam_simulation=simulation,secret_scope='one CDK-owned HawaHawai secret only',cloudwatch_errors=errors,log_window_start_epoch=since,ai_events=ai,new_service='None; static artifact update only' if args.phase6 else 'One daily EventBridge Scheduler; existing secret reused' if args.phase4 else 'Secrets Manager: one credential secret',billing_changed=False)
     output=(ROOT/args.output).resolve() if args.output else ROOT/('.local/phase4-audit.json' if args.phase4 else '.local/phase3-audit.json')
     assert output.is_relative_to(ROOT/'.local'), 'Audit output must remain in generated .local evidence'
     output.write_text(json.dumps(result,indent=2),encoding='utf-8')

@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--deploy', action='store_true')
+    parser.add_argument('--phase', default='phase5', choices=['phase5', 'phase6'])
     args = parser.parse_args()
     session = boto3.Session(profile_name='hawahawai', region_name='us-east-1')
     config = Config(connect_timeout=3, read_timeout=15, retries={'total_max_attempts': 1})
@@ -40,7 +41,7 @@ def main():
     assert all((dist / name).is_file() for name in required)
     files = sorted(p for p in dist.rglob('*') if p.is_file())
     assert all(not p.name.startswith('.env') and p.suffix not in {'.map', '.pem', '.key'} for p in files)
-    archive = ROOT / '.local/phase5-frontend.zip'
+    archive = ROOT / f'.local/{args.phase}-frontend.zip'
     with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zipped:
         for file in files:
             zipped.write(file, file.relative_to(dist).as_posix())
@@ -64,7 +65,7 @@ def main():
             time.sleep(3)
         else:
             raise RuntimeError('Amplify deployment did not finish within the bounded verification window')
-    (ROOT / '.local/phase5-amplify-deployment.json').write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8')
+    (ROOT / f'.local/{args.phase}-amplify-deployment.json').write_text(json.dumps(report, indent=2)+'\n', encoding='utf-8')
     print(json.dumps(report, indent=2))
     return int(args.deploy and not report['deployed'])
 

@@ -3,12 +3,14 @@ import {getAdvisory, errorMessage, type AdvisoryResponse, type VerdictResponse} 
 import {ResourceStatus, Warnings, SourceLink, type Resource} from './ui';
 import {advisoryMatches, guidanceState, date} from './presentation';
 import {useClock} from './hooks';
+import {ParentNotice} from './ParentNotice';
 
 export function AdvisoryContent({value, current, online, now, language}: {value: AdvisoryResponse; current?: VerdictResponse; online: boolean; now: number; language: 'en' | 'hi'}) {
   if (!advisoryMatches(value, current, online, now)) return <p className="notice" role="status">RECHECK REQUIRED: this explanation is expired, offline, or does not match the current decision. Refresh current data before using it.</p>;
   return <><p className="status-label">{value.explanation_method === 'AI' ? 'AI-assisted explanation' : 'Deterministic fallback'} · {value.generator}</p>
     <p>Backend-approved statement ordering. The explanation preserves the current school decision and its actions.</p>
     <p>Generated: {date(value.generated_at)}<br/>Valid until: {date(value.valid_until)}</p>
+    <ParentNotice value={value} current={current} online={online} now={now} language={language}/>
     <div lang={language} className="advisory-text">{value[language]}</div>
     <details><summary>{language === 'hi' ? 'स्कूल के स्वीकृत निर्देश' : 'Approved school action wording'}</summary>
       <ul>{value.actions.map((a, i) => <li key={i}><strong>{a.activity} · {a.recommendation}</strong><p lang={language}>{a[language]}</p>

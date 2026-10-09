@@ -7,6 +7,10 @@ import {AdvisoryView} from './AdvisoryView';
 import {SchoolView} from './SchoolView';
 import {HistoryView} from './HistoryView';
 import {PwaControls} from './PwaControls';
+import {TomorrowPlanner} from './TomorrowPlanner';
+import {SourceConfidence} from './SourceConfidence';
+import {RegulatoryActions} from './RegulatoryActions';
+import {IndoorAlternatives} from './IndoorAlternatives';
 const id = 'delhi-demo-school';
 const loaders = {
   health: (signal: AbortSignal) => getHealth(signal), school: (signal: AbortSignal) => getSchool(id, signal),
@@ -30,10 +34,14 @@ export function App() {
     <main><div className="school-strip"><div><p className="eyebrow">DELHI-NCR SCHOOL PILOT</p><p className="school-name">{school.data?.name || (school.state === 'loading' ? 'Loading demo school…' : 'Demo school profile unavailable')}</p>
       <p>{school.data ? school.data.city + ' · ' + school.data.timezone : 'Current school information is loaded from the backend.'}</p></div>
       <button disabled={!online || busy} onClick={() => setAttempt(n => n + 1)}>{busy ? 'Checking current data…' : 'Refresh current data'}</button></div>
-    <nav className="section-nav" aria-label="School guidance sections"><a href="#today">Today’s decision</a><a href="#actions">School actions</a><a href="#outlook">48-hour outlook</a><a href="#sources">Data sources</a><a href="#school">School info</a></nav>
+    <nav className="section-nav" aria-label="School guidance sections"><a href="#today">Today’s decision</a><a href="#actions">School actions</a><a href="#tomorrow">Tomorrow planner</a><a href="#confidence">Source confidence</a><a href="#regulatory-actions">GRAP actions</a><a href="#advisory">Parent advisory</a><a href="#outlook">48-hour outlook</a><a href="#sources">Data sources</a><a href="#school">School info</a></nav>
     {!online && <p role="alert" className="notice offline">You’re offline. Current recommendation unavailable. Reconnect to check the latest guidance.</p>}
     <SafetyView resource={verdict} online={online} now={now}/>
     <FreshnessView verdict={verdict} grap={grap} now={now}/>
+    <SourceConfidence verdict={verdict} air={air} forecast={forecast} online={online} now={now}/>
+    <RegulatoryActions verdict={verdict} grap={grap} online={online} now={now}/>
+    <IndoorAlternatives value={verdict.data} online={online} now={now}/>
+    <TomorrowPlanner forecast={forecast} online={online} now={now}/>
     <EnvironmentalView air={air} forecast={forecast} now={now}/>
     <AdvisoryView current={verdict.data} online={online} now={now} refresh={attempt}/>
     <div className="secondary-grid"><SchoolView resource={school}/><HistoryView online={online}/></div>

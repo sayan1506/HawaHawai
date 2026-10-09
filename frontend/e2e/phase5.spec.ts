@@ -18,7 +18,8 @@ async function mock(page: Page, options: {state?: string; failure?: string; stat
   if (options.missing) {forecast.points[0].pollutants = []; forecast.points[0].aqi = [];}
   if (options.stale) {air.status = air.freshness_status = 'stale'; forecast.status = forecast.freshness_status = 'stale';}
   const calls: string[] = [];
-  await page.route(api + '/**', async route => {
+  // Context routing also isolates NetworkOnly fetches owned by the service worker.
+  await page.context().route(api + '/**', async route => {
     const path = new URL(route.request().url()).pathname; calls.push(path);
     if (options.delay) await new Promise(resolve => setTimeout(resolve, options.delay));
     if (options.failure && path.endsWith(options.failure)) {
