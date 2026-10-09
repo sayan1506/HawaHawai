@@ -97,7 +97,15 @@ class EnvironmentalService:
             common.update({"observations": [], "observation_providers": observations["providers"], "modeled_current": point, "aqi": point["aqi"] if point else [], "pollutants": point["pollutants"] if point else []})
             common["warnings"] += [w for p in observations["providers"] for w in p["warnings"]]
         else:
-            points = [p for p in data.get("points", []) if datetime.fromisoformat(p["valid_at"]).timestamp() >= now][:48]
+            try:
+                cached_points = data.get("points", [])
+                dates = [datetime.fromisoformat(p["valid_at"]) for p in cached_points]
+                epochs = [d.timestamp() for d in dates]
+                valid = all(d.utcoffset() is not None and t % 3600 == 0 for d, t in zip(dates, epochs))
+                valid = valid and all(b - a == 3600 for a, b in zip(epochs, epochs[1:]))
+                points = [p for p, t in zip(cached_points, epochs) if t >= now][:48] if valid else []
+            except (KeyError, TypeError, ValueError, OverflowError, OSError):
+                points = []
             if len(points) != 48:
                 common["status"] = "unavailable"
                 common["freshness_status"] = "unavailable"

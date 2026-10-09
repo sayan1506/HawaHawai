@@ -2,15 +2,17 @@ import React from 'react';
 import type {Evidence,VerdictResponse} from './api';
 import {ResourceStatus,Sources,type Resource} from './ui';
 import {date,evidenceFreshness,guidanceState,regulatoryLabel} from './presentation';
+import {forecastCoverage,forecastAqi} from './forecastCoverage';
 
 export function evidenceConfidence(value:Evidence|undefined,now:number) {
   if(!value||value.status==='unavailable')return {label:'Unavailable evidence',reasons:['No usable values are supplied. Missing evidence cannot establish safe air.']};
   const stale=evidenceFreshness(value,now).startsWith('stale')||value.sources.some(s=>s.freshness==='stale'||s.valid_until&&now>=Date.parse(s.valid_until));
   const points='points' in value?value.points:value.modeled_current?[value.modeled_current]:[];
-  const missing=!value.sources.length||!points.length||('points' in value&&points.length<48)||points.some(p=>!p.aqi.some(a=>a.scale==='US_AQI')||!p.pollutants.some(a=>a.name==='pm2_5')||!p.pollutants.some(a=>a.name==='pm10'));
+  const missing=!value.sources.length||!points.length||('points' in value&&!forecastCoverage(value,now).complete)||points.some(p=>forecastAqi(p)===null||!p.pollutants.some(a=>a.name==='pm2_5')||!p.pollutants.some(a=>a.name==='pm10'));
   const reasons=['Classification describes evidence completeness and provenance, not a probability of safety.'];
   if(stale)reasons.push('Backend freshness or a source/retrieval deadline is stale. Refresh before relying on current conditions.');
   if(missing)reasons.push('Required display values, hours or source provenance are incomplete; missing values are not zero.');
+  if('points' in value&&!forecastCoverage(value,now).complete)reasons.push('Forecast coverage must contain exactly 48 distinct, chronological, consecutive UTC hours matching its declared start and end.');
   if(value.sources.some(s=>s.kind==='model_forecast'))reasons.push('Open-Meteo/CAMS grid estimates are modeled forecasts, not physical school measurements. Geographic representativeness is limited.');
   if('generated_at' in value&&!value.generated_at)reasons.push('Model initialization timestamp is not supplied; retrieval time is not a model run time.');
   if('observations' in value&&!value.observations.length)reasons.push('Official station observations are unavailable. Indian AQI is not established by modeled US AQI.');

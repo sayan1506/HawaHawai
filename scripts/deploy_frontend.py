@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--deploy', action='store_true')
-    parser.add_argument('--phase', default='phase5', choices=['phase5', 'phase6'])
+    parser.add_argument('--phase', default='phase5', choices=['phase5', 'phase6', 'phase7'])
     args = parser.parse_args()
     session = boto3.Session(profile_name='hawahawai', region_name='us-east-1')
     config = Config(connect_timeout=3, read_timeout=15, retries={'total_max_attempts': 1})

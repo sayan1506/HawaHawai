@@ -83,7 +83,7 @@ class OpenMeteoProvider:
         if not isinstance(hourly, dict) or not isinstance(hourly.get("time"), list) or not hourly["time"]:
             raise ProviderError("INVALID_SCHEMA")
         epochs = hourly["time"]
-        if any(not isinstance(t, (int, float)) or isinstance(t, bool) for t in epochs):
+        if any(not isinstance(t, (int, float)) or isinstance(t, bool) or not math.isfinite(t) or t % 3600 != 0 for t in epochs):
             raise ProviderError("INVALID_TIMESTAMP")
         if any(b - a != 3600 for a, b in zip(epochs, epochs[1:])):
             raise ProviderError("INVALID_FORECAST_INTERVAL")

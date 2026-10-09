@@ -89,7 +89,7 @@ def snapshot():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", choices=["before", "after"])
-    parser.add_argument("--phase", default="", choices=["", "phase1", "phase2", "phase3", "phase4", "phase5", "phase6"])
+    parser.add_argument("--phase", default="", choices=["", "phase1", "phase2", "phase3", "phase4", "phase5", "phase6", "phase7"])
     args = parser.parse_args()
     LOCAL.mkdir(exist_ok=True)
     current = snapshot()

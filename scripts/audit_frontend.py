@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--phase', default='phase5', choices=['phase5', 'phase6'])
+    parser.add_argument('--phase', default='phase5', choices=['phase5', 'phase6', 'phase7'])
     args = parser.parse_args()
     private = [value.encode() for key, value in dotenv_values(ROOT/'backend/.env').items()
                if value and (key.endswith('API_KEY') or 'SECRET' in key or 'TOKEN' in key) and len(value) >= 12]

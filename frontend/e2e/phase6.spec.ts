@@ -25,6 +25,18 @@ test('SIMULATION Feature B: confidence explains modeled, missing and unknown evi
   const {calls}=await setup(page);await expect(page.locator('#confidence')).toContainText('Limited basis for precaution');await expect(page.locator('#confidence')).toContainText('Modeled · limited');await expect(page.locator('#confidence')).toContainText('Official GRAP verification: UNKNOWN');
   await page.getByText('48-hour forecast evidence — source dates and geographic limitations',{exact:true}).click();await expect(page.locator('#confidence')).toContainText('Source validity');await expect(page.locator('#confidence')).toContainText('Retrieved');expect(calls.filter(p=>p.endsWith('/forecast'))).toHaveLength(1);
 });
+
+for(const malformed of ['copies','gap','reversed'])test(`SIMULATION F6-01: ${malformed} forecast hours are incomplete`,async({page})=>{
+  await setup(page,v=>{
+    if(malformed==='copies')v.forecast.points=Array.from({length:48},()=>structuredClone(v.forecast.points[0]));
+    if(malformed==='gap')v.forecast.points[24]=structuredClone(v.forecast.points[25]);
+    if(malformed==='reversed')v.forecast.points.reverse();
+  });
+  const evidence=page.locator('#confidence .status-grid>div').nth(1);
+  await expect(evidence.locator('.status-label')).toHaveText('Incomplete evidence');
+  await expect(page.locator('#tomorrow')).toContainText('Provisional planning');
+  if(malformed==='copies')await expect(page.locator('#tomorrow')).toContainText('0 of 24 hours');
+});
 test('SIMULATION Feature C: unknown GRAP and source effective dates stay truthful',async({page})=>{
   await setup(page);await expect(page.locator('#regulatory-actions')).toContainText('Current activation is UNKNOWN');await expect(page.locator('#regulatory-actions')).toContainText('No verified applicable restriction');
   await page.getByText('Official originals, publication and effective dates',{exact:true}).click();await expect(page.locator('#regulatory-actions')).toContainText('Effective from');await expect(page.locator('#regulatory-actions')).toContainText('UNVERIFIED');

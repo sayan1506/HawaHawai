@@ -27,6 +27,10 @@ def _point(point, sources, expected_type, now, *, maximum_age=None, forecast_tim
         if forecast_time is not None and when != forecast_time:
             return None
         by_id = {s["source_id"]: s for s in sources if s.get("kind") == expected_type and s.get("freshness") == "fresh"}
+        # A point has one authoritative US-AQI value. Ambiguous duplicates must
+        # not choose a favorable value merely because it appears first.
+        if sum(a.get('scale') == 'US_AQI' for a in point['aqi']) != 1:
+            return None
         pollutants = point["pollutants"]
         if any(not number(p["value"]) or p["unit"] != "ug/m3" or p["source_type"] != expected_type or p["source_id"] not in by_id
                or (p["observed_at"] is not None if expected_type == "model_forecast" else p["forecast_for"] is not None)
@@ -37,6 +41,8 @@ def _point(point, sources, expected_type, now, *, maximum_age=None, forecast_tim
                 continue  # No conversion, concentration substitution or GRAP comparison.
             source = by_id.get(aqi["source_id"])
             if not source or not number(aqi["value"]) or aqi["value"] > 500 or aqi.get("source_type") != expected_type:
+                return None
+            if source.get('valid_until') and instant(source['valid_until']) <= now:
                 return None
             if expected_type == "model_forecast":
                 if aqi["observed_at"] is not None or instant(aqi["forecast_for"]) != when:
@@ -90,7 +96,14 @@ def evaluate(school, air, forecast, regulatory, evaluation_time, context=None, p
     forecast_usable = _fresh(forecast, now, policy.forecast_retrieval_max_age_seconds)
     if forecast_usable:
         try:
-            points = {instant(p["valid_at"]): p for p in forecast["points"]}
+            points, duplicates = {}, set()
+            for point in forecast['points']:
+                when = instant(point['valid_at'])
+                if when in points: duplicates.add(when)
+                else: points[when] = point
+            for when in duplicates: points.pop(when, None)
+            if duplicates.intersection(expected):
+                warnings.append('DUPLICATE_ACTIVITY_FORECAST_HOUR: ambiguous hourly evidence is withheld.')
             for when in expected:
                 value = _point(points.get(when), forecast.get("sources", []), "model_forecast", now, forecast_time=when)
                 if value is not None:
@@ -202,6 +215,15 @@ def evaluate(school, air, forecast, regulatory, evaluation_time, context=None, p
         validity.append(instant(regulatory["next_transition_at"]))
     for value in measurements + ([modeled] if modeled else []):
         validity.append(instant(value["timestamp"]) + timedelta(seconds=900))
+    used_sources = {value['source_id'] for value in available_values}
+    for payload in (air, forecast):
+        for source in payload.get('sources', []):
+            if source.get('source_id') in used_sources and source.get('valid_until'):
+                try:
+                    deadline = instant(source['valid_until'])
+                    if deadline > now: validity.append(deadline)
+                except (TypeError, ValueError):
+                    pass  # Invalid source dates already disqualify points above.
     # All inputs are reevaluated on every request. This is a fingerprint, not a cache.
     fingerprint = hashlib.sha256(json.dumps({"school": school, "policy": policy.version, "regulatory": regulatory["snapshot_version"], "verification": regulatory["verification_state"], "grade": context.grade, "activity": context.activity, "evidence": evidence, "restrictions": applicable, "decision": decision.value}, sort_keys=True, allow_nan=False).encode()).hexdigest()[:24]
     measurement_ids = {v["source_id"] for v in measurements}

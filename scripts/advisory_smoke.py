@@ -19,6 +19,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--local-provider", action="store_true")
     parser.add_argument("--base", default=BASE)
+    parser.add_argument('--phase', default='phase3', choices=['phase3', 'phase7'])
     args = parser.parse_args()
     from agent.runtime import invoke_strands, classify
     from agent.explanations import validate_plan
@@ -59,8 +60,8 @@ def main():
         result = {"success": True, "endpoint": prefix+"/advisory", "method": first["explanation_method"], "provider": first["generator"],
             "decision": first["decision"], "regulation": first["regulatory_status"]["verification_state"], "cache_first": first["cache"]["status"], "cache_second": second["cache"]["status"], "regressions": regressions}
         label = "docker" if args.base.startswith("http://127.0.0.1:") else "live"
-        (ROOT / f".local/phase3-{label}-advisory.json").write_text(json.dumps(first, ensure_ascii=False, indent=2), encoding="utf-8")
-    target = ".local/phase3-provider-smoke.json" if args.local_provider else (".local/phase3-docker-smoke.json" if args.base.startswith("http://127.0.0.1:") else ".local/phase3-api-smoke.json")
+        (ROOT / f".local/{args.phase}-{label}-advisory.json").write_text(json.dumps(first, ensure_ascii=False, indent=2), encoding="utf-8")
+    target = f".local/{args.phase}-provider-smoke.json" if args.local_provider else (f".local/{args.phase}-docker-smoke.json" if args.base.startswith("http://127.0.0.1:") else f".local/{args.phase}-api-smoke.json")
     (ROOT / target).write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result))
     return int(not result["success"])

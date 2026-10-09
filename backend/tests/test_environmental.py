@@ -80,6 +80,12 @@ class ProviderTests(unittest.TestCase):
             with self.assertRaises(ProviderError):
                 self.provider.normalize(raw, self.school, NOW)
 
+    def test_forecast_requires_utc_hour_boundaries(self):
+        raw = fixture()
+        raw['hourly']['time'] = [t + 1800 for t in raw['hourly']['time']]
+        with self.assertRaises(ProviderError):
+            self.provider.normalize(raw, self.school, NOW)
+
     def test_official_adapter_never_invents_readings(self):
         self.assertEqual(IndianObservationProvider().fetch(self.school, NOW)["observations"], [])
 
@@ -131,6 +137,28 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.provider.fetch.call_count, 1)
         self.assertEqual(len(second["points"]), 48)
 
+    def test_malformed_cached_forecast_is_unavailable_not_complete(self):
+        import copy
+        for kind in ('duplicate', 'gap', 'invalid', 'non_hour', 'conflicting'):
+            with self.subTest(kind=kind):
+                cache = MemoryCache()
+                service = EnvironmentalService(cache, self.provider, lambda: self.now)
+                service.get(self.school, 'forecast')
+                key = cache_prefix(self.school) + '#forecast'
+                cached = cache.get(key)
+                points = cached['data']['points']
+                if kind in ('duplicate', 'conflicting'):
+                    points[10] = copy.deepcopy(points[9])
+                    if kind == 'conflicting': points[10]['aqi'][0]['value'] = 1
+                elif kind == 'gap': points[10]['valid_at'] = points[12]['valid_at']
+                elif kind == 'invalid': points[10]['valid_at'] = 'not-a-date'
+                else: points[10]['valid_at'] = points[10]['valid_at'].replace(':00:00', ':30:00')
+                cache.put(key, cached)
+                result = service.get(self.school, 'forecast')
+                self.assertEqual(result['status'], 'unavailable')
+                self.assertEqual(result['points'], [])
+                self.assertEqual(result['retrieved_at'], cached['data']['retrieved_at'])
+
     def test_stale_timeout_fallback_and_negative_cache(self):
         first = self.service.get(self.school, "current")
         self.now += 901
@@ -173,6 +201,27 @@ class ServiceTests(unittest.TestCase):
         result = self.service.get(self.school, "forecast")
         self.assertEqual(result["status"], "unavailable")
         self.provider.fetch.assert_not_called()
+
+    def test_concurrent_refresh_performs_one_provider_call(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Event
+        entered, proceed = Event(), Event()
+        def fetch(school, now):
+            entered.set()
+            if not proceed.wait(3): raise TimeoutError('Isolated test synchronization')
+            return OpenMeteoProvider().normalize(fixture(), school, now)
+        self.provider.fetch.side_effect = fetch
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            first = pool.submit(self.service.get, self.school, 'forecast')
+            try:
+                self.assertTrue(entered.wait(3))
+                second = self.service.get(self.school, 'forecast')
+                self.assertEqual(second['status'], 'unavailable')
+                self.assertIn('LIVE_REFRESH_FAILED: REFRESH_IN_PROGRESS', second['warnings'])
+            finally:
+                proceed.set()
+            self.assertEqual(len(first.result(timeout=3)['points']), 48)
+        self.assertEqual(self.provider.fetch.call_count, 1)
 
     def test_dynamo_operations_scoped(self):
         client = Mock()

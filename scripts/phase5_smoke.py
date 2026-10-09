@@ -24,7 +24,7 @@ SCHOOL = '/v1/schools/delhi-demo-school'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--phase', default='phase5', choices=['phase5', 'phase6'])
+    parser.add_argument('--phase', default='phase5', choices=['phase5', 'phase6', 'phase7'])
     args = parser.parse_args()
     keys=[v.encode() for k,v in dotenv_values(ROOT/'backend/.env').items() if k.endswith('API_KEY') and v and len(v)>=12]
     results = []
@@ -76,9 +76,9 @@ def main():
             hosted[asset] = {'status': response.status, 'bytes': len(data), 'content_type': response.headers.get('Content-Type')}
             if asset == '/': assert 'Content-Security-Policy' in response.headers and b'assets/index-' in data
             if asset.endswith('.png'): assert data.startswith(b'\x89PNG\r\n\x1a\n')
-            if args.phase=='phase6':
+            if args.phase in {'phase6','phase7'}:
                 assert data==(ROOT/'frontend/dist'/('index.html' if asset=='/' else asset.lstrip('/'))).read_bytes(), 'Hosted artifact does not match verified build'
-    if args.phase=='phase6':
+    if args.phase in {'phase6','phase7'}:
         for asset in re.findall(r'(?:src|href)="(/assets/[^" ]+)"', (ROOT/'frontend/dist/index.html').read_text(encoding='utf-8')):
             with urlopen(ORIGIN+asset,timeout=20) as response:
                 data=response.read();assert response.status==200 and data==(ROOT/'frontend/dist'/asset.lstrip('/')).read_bytes()

@@ -278,6 +278,40 @@ class RegulatoryTests(unittest.TestCase):
 
 
 class SafetyTests(unittest.TestCase):
+    def test_duplicate_conflicting_forecast_hour_never_yields_go(self):
+        for reverse in (False, True):
+            with self.subTest(reverse=reverse):
+                air, forecast, _ = environment(50, True)
+                elevated = copy.deepcopy(forecast['points'][0])
+                elevated['aqi'][0]['value'] = 250
+                forecast['points'].insert(0 if not reverse else 1, elevated)
+                result = evaluate(SCHOOL, air, forecast, resolve(snapshot(0), NOW, ActivityContext()), NOW)
+                self.assertNotEqual(result['decision'], 'GO_OUTDOORS')
+                self.assertFalse(result['data_quality']['forecast_available'])
+
+    def test_conflicting_us_aqi_values_in_a_point_never_yield_go(self):
+        air, forecast, _ = environment(50, True)
+        for point in air['observations'] + [air['modeled_current']] + forecast['points']:
+            elevated = copy.deepcopy(point['aqi'][0]); elevated['value'] = 250
+            point['aqi'].append(elevated)
+        result = evaluate(SCHOOL, air, forecast, resolve(snapshot(0), NOW, ActivityContext()), NOW)
+        self.assertNotEqual(result['decision'], 'GO_OUTDOORS')
+
+    def test_expired_physical_source_cannot_authorize_go(self):
+        air, forecast, _ = environment(50, True)
+        air['sources'][-1]['valid_until'] = (NOW - timedelta(seconds=1)).isoformat()
+        result = evaluate(SCHOOL, air, forecast, resolve(snapshot(0), NOW, ActivityContext()), NOW)
+        self.assertNotEqual(result['decision'], 'GO_OUTDOORS')
+
+    def test_source_expiry_caps_positive_decision(self):
+        air, forecast, _ = environment(50, True)
+        now = NOW + timedelta(minutes=1)
+        deadline = now + timedelta(seconds=30)
+        air['sources'][-1]['valid_until'] = deadline.isoformat()
+        result = evaluate(SCHOOL, air, forecast, resolve(snapshot(0), now, ActivityContext()), now)
+        self.assertEqual(result['decision'], 'GO_OUTDOORS')
+        self.assertLessEqual(instant(result['valid_until']), deadline)
+
     def test_every_verdict_and_policy_boundaries(self):
         for value, expected in ((0, "GO_OUTDOORS"), (50, "GO_OUTDOORS"), (100, "GO_OUTDOORS"), (100.1, "MODIFIED_OUTDOORS"), (101, "MODIFIED_OUTDOORS"), (150, "MODIFIED_OUTDOORS"), (151, "MODIFIED_OUTDOORS"), (200, "MODIFIED_OUTDOORS"), (200.1, "INDOOR_ONLY"), (201, "INDOOR_ONLY"), (300, "INDOOR_ONLY"), (301, "INDOOR_ONLY"), (500, "INDOOR_ONLY")):
             with self.subTest(value=value):

@@ -10,6 +10,9 @@ hi:{title:'अभिभावक सूचना',decision:'वर्तमा�
   limitation:'मॉडल पूर्वानुमान स्कूल में हवा के वास्तविक माप नहीं हैं। US AQI भारतीय AQI नहीं है। पूर्वानुमान अनिश्चित हैं; अंदर की हवा अपने-आप सुरक्षित नहीं है। मूल स्कूल आदेशों का पालन करें। यह सूचना सुरक्षित हवा की गारंटी नहीं देती।',missing:'आधिकारिक स्टेशन माप / भारतीय AQI उपलब्ध नहीं हैं।',observations:'दिए गए माप के स्रोत और उनकी सीमाएँ देखें; मॉडल US AQI से आधिकारिक भारतीय AQI की पुष्टि नहीं होती।',unknown:'वर्तमान आधिकारिक सक्रियता की पुष्टि नहीं है; इसका अर्थ पाबंदियाँ हटना नहीं है।',sources:'स्रोत',recheck:'काम करने या आगे भेजने से पहले लाइव ऐप में फिर जाँचें; ऊपर दिए समय पर यह सूचना समाप्त हो जाती है।'}};
 const activityHi:Record<string,string>={assembly:'प्रार्थना सभा',sports:'खेल',physical_education:'शारीरिक शिक्षा',other:'अन्य बाहरी गतिविधियाँ',indoor:'अंदरूनी विकल्प',administration:'प्रशासन',parent_communication:'अभिभावक संचार'};
 const freshnessHi:Record<string,string>={fresh:'ताज़ा',stale:'पुरानी',unavailable:'अनुपलब्ध'};
+// Registry evaluation time is a read-time clock, not legal/source freshness.
+// Mirror the backend fingerprint: every other regulatory field stays bound.
+const regulatoryBasis=(value:AdvisoryResponse['regulatory_status'])=>JSON.stringify(Object.fromEntries(Object.entries(value).filter(([key])=>key!=='evaluation_time')));
 // Distinct requirements remain distinct. Same logical scope with altered wording is rejected.
 export function noticeActions(actions:LocalizedAction[]) {
   const seen=new Map<string,LocalizedAction>();
@@ -32,7 +35,7 @@ export function parentNotice(value:AdvisoryResponse,current:VerdictResponse|unde
       ||(value.explanation_method==='DETERMINISTIC')!==(value.generator==='rule_template')
       ||value.valid_until!==current?.valid_until
       ||JSON.stringify(value.data_quality)!==JSON.stringify(current.data_quality)
-      ||JSON.stringify(value.regulatory_status)!==JSON.stringify(current.regulatory_status))return undefined;
+      ||regulatoryBasis(value.regulatory_status)!==regulatoryBasis(current.regulatory_status))return undefined;
     const w=words[language],v=value.authoritative_decision;
     const actions=noticeActions(value.actions);
     if(!actions.length)return undefined;
